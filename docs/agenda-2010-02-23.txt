@@ -1,0 +1,27 @@
+Meeting with Bo Yan:
+====================
+
+- what are his comments and questions? OK
+- installation --> thursday
+- how will the information will be passed to us --> OK
+- do they install or do we need to install it on some --> discuss on Thursday
+       remote system?
+	ocropus 0.43
+	reportlab, PIL
+	
+
+
+
+Some thoughts :-)
+=====================
+- install *.py to /usr/bin/ using "sudo cp"?
+
+display dialog to chooss type of output
+- image tiff
+- PDF
+- test multipage TIFF having JPEGs inside
+- agenda this thurasdy: how to get ocropus and the other stuff
+- add progress output: pipe output to file, they will check for the changes; check what progress types we want to have; send an email to Bo Yan
+- check if PDFs can be generated without page size information
+
+
