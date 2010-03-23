@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 # (C) 2010 University of Kaiserslautern 
 # 
 # You may not use this file except under the terms of the accompanying license.
@@ -38,14 +37,6 @@ from cStringIO import StringIO # "cStringIO" is faster, but if you need to subcl
 verbose     = 0         # output debugging information
 dpi         = 200       # resolution of the ouput images in the pdf
 
-
-# FIXME: is currently not needed; will be needed when using drawImage
-def pil2Replab(img):
-    writeSIO = StringIO()
-    img.save(writeSIO, format="JPEG")
-    writeSIO.seek(0) #Rewind it
-    ir = canvas.ImageReader(writeSIO)
-    return ir
 
 # ========= ImagePDF =========
 
@@ -114,29 +105,49 @@ def convert2ImageTextPDF(bookDir,pdfFileName,b,pdf):
         pdf.setFillColorRGB(1.0,1.0,1.0)
         for j in range(len(b.pages[i].lines)): # j is the object of each line in book class
             numSpaces = 0;
-            b.pages[i].lines[j].output()
             if (not b.pages[i].lines[j].checkTextable()):
                 continue
-            for k in range(len(b.pages[i].lines[j].txt)):
-                if (b.pages[i].lines[j].txt[k]==unicode(' ') or 
-                    b.pages[i].lines[j].txt[k]==unicode('\n')):
-                    numSpaces += 1
-                    continue
-                pdf.setFont("Helvetica", 10)
-                #print "linePos: ", b.pages[i].linesPos[j]
-                #print "ccsPos: ",b.pages[i].lines[j].ccs[k-numSpaces]
-                #print "\"",b.pages[i].lines[j].txt[k-numSpaces],"\""
-                ccPos = b.pages[i].linesPos[j] + b.pages[i].lines[j].ccs[k-numSpaces]
+            
+            
+            startIndex = 0
+            endIndex   = len(b.pages[i].lines[j].txt)
+            nextSepIndex = startIndex+1;
+            while(startIndex<endIndex):
+                while (nextSepIndex < endIndex and
+                      b.pages[i].lines[j].txt[nextSepIndex] != ' ' and
+                      b.pages[i].lines[j].txt[nextSepIndex] != '\n'):
+                      nextSepIndex = nextSepIndex+1
+                word = ""
+                for k in range(startIndex,nextSepIndex):
+                    word = word + b.pages[i].lines[j].txt[k]
+                wordPos = b.pages[i].linesPos[j] + b.pages[i].lines[j].ccs[startIndex-numSpaces]
                 if(verbose > 3):
                     print ccPos
                 
-                pdf.drawString(ccPos[0]*factor*cm, 
-                               ccPos[1]*factor*cm, b.pages[i].lines[j].txt[k])
+                pdf.drawString(wordPos[0]*factor*cm, 
+                                wordPos[1]*factor*cm, word)
+                numSpaces = numSpaces + 1
+                startIndex = nextSepIndex+1
+                nextSepIndex = startIndex+1
+            # what follows is the old code that puts each character as a single string
+            # this posed some issues when searching for words
+            #for k in range(len(b.pages[i].lines[j].txt)):
+                #if (b.pages[i].lines[j].txt[k]==unicode(' ') or 
+                    #b.pages[i].lines[j].txt[k]==unicode('\n')):
+                    #numSpaces += 1
+                    #continue
+                #pdf.setFont("Helvetica", 10)
+                #ccPos = b.pages[i].linesPos[j] + b.pages[i].lines[j].ccs[k-numSpaces]
+                #if(verbose > 3):
+                    #print ccPos
+                
+                #pdf.drawString(ccPos[0]*factor*cm, 
+                               #ccPos[1]*factor*cm, b.pages[i].lines[j].txt[k])
         
         # put image over the text
-        pdf.drawInlineImage(img.resize((resizeW,resizeH)), 0,0,width*cm,height*cm) # use inline as each page is used only once
+        pdf.drawInlineImage(img.resize((int(round(resizeW)),int(round(resizeH)))), 0,0,width*cm,height*cm) # use inline as each page is used only once
         pdf.showPage() # finish PDF page
-    pdf.save() # save PDF to sile
+    pdf.save() # save PDF to file
             
 
 
@@ -175,72 +186,54 @@ def convert2TokenPDF(bookDir,pdfFileName,b,pdf):
         pdf.setFillColorRGB(1.0,1.0,1.0)
         #print "length of lines",len(b.pages[i].lines)
         for j in range(len(b.pages[i].lines)): # iterate through all pages
-            if(b.pages[i].lines[j].checkTokenable() == False): continue
+            if(b.pages[i].lines[j].checkTokenable() == False or
+               b.pages[i].lines[j].checkTextable() == False): continue
             numSpaces = 0;
+            # first: put text
+            startIndex = 0
+            endIndex   = len(b.pages[i].lines[j].txt)
+            nextSepIndex = startIndex+1;
+            while(startIndex<endIndex):
+                while (nextSepIndex < endIndex and
+                      b.pages[i].lines[j].txt[nextSepIndex] != ' ' and
+                      b.pages[i].lines[j].txt[nextSepIndex] != '\n'):
+                      nextSepIndex = nextSepIndex+1
+                word = ""
+                for k in range(startIndex,nextSepIndex):
+                    word = word + b.pages[i].lines[j].txt[k]
+                wordPos = b.pages[i].linesPos[j] + b.pages[i].lines[j].ccs[startIndex-numSpaces]
+                if(verbose > 3):
+                    print ccPos
+                
+                pdf.drawString(wordPos[0]*factor*cm, 
+                                wordPos[1]*factor*cm, word)
+                numSpaces = numSpaces + 1
+                startIndex = nextSepIndex+1
+                nextSepIndex = startIndex+1
+            # second: put tokens
             for k in range(len(b.pages[i].lines[j].tokenIDs)): 
                 #check if token is already present
                 tokenIndex = -1;
                 tokenIndex = b.pages[i].lines[j].tokenIDs[k]
-                # FIXME joost, figure out if you still need this
-
-                #for l in range(len(tokens)):
-                    #if(tokens[l][0] == b.pages[i].lines[j].txt[k]):
-                        #tokenIndex = l;
-                        #break;
-                #if (tokenIndex < 0):
-                    #tokX0 = b.pages[i].linesPos[j,0]+b.pages[i].lines[j].ccs[k-numSpaces,0]
-                    #tokY0 = b.pages[i].linesPos[j,1]+b.pages[i].lines[j].ccs[k-numSpaces,1]
-                    #tokX1 = b.pages[i].linesPos[j,0]+b.pages[i].lines[j].ccs[k-numSpaces,2]
-                    #tokY1 = b.pages[i].linesPos[j,1]+b.pages[i].lines[j].ccs[k-numSpaces,3]
-                    #print([tokX0,img.size[1]-tokY0,tokX1,img.size[1]-tokY1])
-                    #token = img.crop([tokX0,img.size[1]-tokY1,tokX1,img.size[1]-tokY0]);
-                    #token.load()
-                    #tokens.append([b.pages[i].lines[j].txt[k-numSpaces], token])
-                    #tokenIndex = len(tokens)-1
-                    #fn = "token-%d.png" %(ord(tokens[tokenIndex][0]))
-                    #print fn
-                    #tokens[tokenIndex][1].save(fn)
-                    
-                #tokens[tokenIndex][1].show()
-                #pdf.drawImage(tokens[tokenIndex][1].resize((resizeW,resizeH)), 0,0,width*cm,height*cm)
-                #print  b.pages[i].linesPos
- 
                 # FIXME joost,comment XO yO ccPOS
                 X0 = b.pages[i].linesPos[j,0]+b.pages[i].lines[j].ccs[k,0]
                 Y0 = H-(b.pages[i].linesPos[j,1]+b.pages[i].lines[j].ccs[k,1])
-                #print X0, Y0
                 ccPos = b.pages[i].linesPos[j] + b.pages[i].lines[j].ccs[k]
-                #print ccPos
-                #time.sleep(5);
-                
+
                 # width and height of cc in PDF units
                 ccWidth = factor*(b.pages[i].lines[j].ccs[k,2]-b.pages[i].lines[j].ccs[k,0])
                 ccHeight= factor*(b.pages[i].lines[j].ccs[k,3]-b.pages[i].lines[j].ccs[k,1])
                 
                 ccW = (1.0/2.54)*ccWidth*dpi*0.5
                 ccH = (1.0/2.54)*ccHeight*dpi*0.5
-                #print(ccWidth,ccHeight,ccW,ccH, width, height, X0*factor, Y0*factor)
-                pdf.drawString(ccPos[0]*factor*cm, 
-                               ccPos[1]*factor*cm, b.pages[i].lines[j].txt[k])
+                #pdf.drawString(ccPos[0]*factor*cm, 
+                               #ccPos[1]*factor*cm, b.pages[i].lines[j].txt[k])
                 if(ccW >= 1 and ccH >= 1):
-                    #print("draw something")
-                    #pdf.drawInlineImage(tokens[tokenIndex][1].resize((ccW,ccH)), 
-                                    #ccPos[0]*factor*cm,ccPos[1]*factor*cm)\
-                    #print len(b.tokens)
                     f = b.tokens[tokenIndex]
                     img = Image.open(f)
                     pdf.drawInlineImage(img, 
                                 ccPos[0]*factor*cm,ccPos[1]*factor*cm,
                                 ccWidth*cm,ccHeight*cm)
-                    #img.close()
-                #pdf.drawInlineImage(tokens[tokenIndex][1], 0,0)
-                
-                #print "linePos: ", b.pages[i].linesPos[j]
-                #print "ccsPos: ",b.pages[i].lines[j].ccs[k-numSpaces]
-                #print "\"",b.pages[i].lines[j].txt[k-numSpaces],"\""
-                ccPos = b.pages[i].linesPos[j] + b.pages[i].lines[j].ccs[k-numSpaces]
-                #print ccPos
-                
                 
         pdf.showPage() # finish PDF page
     pdf.save() # save PDF to file
@@ -316,7 +309,6 @@ def main(sysargv):
 
     
     # read ocrodir book directory
-    # FIXME: check if this works as expected
     if (len(bookDir)>0 and bookDir[len(bookDir)-1]!='/'):
         bookDir = bookDir+'/'
     b = Book(bookDir)
@@ -327,7 +319,9 @@ def main(sysargv):
     
     # generate PDF canvas with correct pagesize
     pdf = canvas.Canvas(pdfFileName,pagesize=(b.pageSize[0]/2.54*72.0,b.pageSize[1]/2.54*72.0))
-    
+    pdf.setAuthor("DECAPOD GenPDF")
+    pdf.setTitle("Generated PDF")
+
     # read data file    
     if(pdfOutputType == 1):
         convert2ImagePDF(bookDir,pdfFileName,b,pdf)
