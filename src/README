@@ -20,7 +20,7 @@ WARNING at the end of the directory there must be a '\' or the program will not 
 
 
 
-There are also many other options; you can access them by typing runPipeline.py [--help or -h]
+There are also many other options; you can access them by typing decapod-genpdf.py [--help or -h]
 
 
 "   -b  --book	 name of multipage tiff file\n"\
