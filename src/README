@@ -14,7 +14,7 @@ decapod-genpdf.py
 the required options you will need to provide are:
 
 -b [name of multipage tiff file] 
--d [name of directory that will store ocropus intermediate file]
+-d [name of directory that will store ocropus intermediate files]
 WARNING at the end of the directory there must be a '\' or the program will not function.
 -p [name of the output pdf file]
 
