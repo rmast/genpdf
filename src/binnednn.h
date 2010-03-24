@@ -90,6 +90,7 @@ class binnednn
         int numOrigMerge() const;
         //total number of classes (tokenIDs) 
         int countTotalClasses();
+        void tokenCounts(const char *fn);
         //outputs the token with the most members and 
         void maxToken();
         int totalCount() const;

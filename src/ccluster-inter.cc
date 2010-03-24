@@ -130,6 +130,7 @@
         if( verbose >= 1)printf("the total num bins=%d, and the total count=%d numOrigMerge=%d\n",binned.numBins(),binned.totalCount(),binned.numOrigMerge());
         if( verbose >= 2)printf("total classes....%d\n",binned.countTotalClasses());
         if( verbose >= 1)binned.maxToken();
+        
     //  if( verbose >= 3)binned.sortImage("resorted.png"); NOT ADVISABLE ON LARGE FILES (all tokens stored in ram)
     }
 
@@ -290,7 +291,7 @@
             output_stats(*binned,verbose);
             if( verbose >= 1)printf("outputing seg2bbox info\n");
             if (seg2bboxFlag )seg2bbox(book_dir,*bookstore,verbose);
-            
+            if( verbose >= 1)binned->tokenCounts(book_dir);
         }catch(const char *e) {
             fprintf(stderr,"error: %s\n",e);
         } 
