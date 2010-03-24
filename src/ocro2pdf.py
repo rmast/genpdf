@@ -330,12 +330,11 @@ def main(sysargv):
         convert2ImageTextPDF(bookDir,pdfFileName,b,pdf)
 
     if(pdfOutputType == 3):
-        convert2TokenPDF(bookDir,pdfFileName,b,pdf)    
-        #if(b.checkTokenable() == 1):
-            #convert2TokenPDF(bookDir,pdfFileName,b,pdf)    
-        #else:
-            #print("Error: Book structure is not tokenable. Some files seem to be missing")
-            #sys.exit(0)
+        if(b.checkTokenPresence() == 1):
+            convert2TokenPDF(bookDir,pdfFileName,b,pdf)
+        else:
+            print("[warn] No tokens found! Book structure is not tokenable. Switching to type 2 mode!")
+            convert2ImageTextPDF(bookDir,pdfFileName,b,pdf)
     
 
 
