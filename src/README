@@ -18,7 +18,7 @@ the required options you will need to provide are:
 WARNING at the end of the directory there must be a '\' or the program will not function.
 -p [name of the output pdf file]
 
-For example if your multipage tiff is named book.tiff you could type something like this.
+For example, if your multipage tiff is named "book.tiff" you could type something like this.
 
 "decapod-genpdf.py -d temp/ -b book.tiff -p out.pdf"
 

@@ -208,8 +208,9 @@
             bool epsFlag = false;
             bool seg2bboxFlag = true;
             bool enforceCSEGmatching = true;
+            bool just_run_seg2bbox = false;
             //parse options
-            while ((c = getopt (argc, argv, "he:r:v:b:RSC")) != -1) {
+            while ((c = getopt (argc, argv, "he:r:v:b:RSCJ")) != -1) {
                 switch (c) {           
                     case 'C':   
                     enforceCSEGmatching = false;
@@ -236,6 +237,9 @@
                     break;   
                     case 'S':
                     seg2bboxFlag = false;
+                    break;   
+                    case 'J':
+                    just_run_seg2bbox = true;
                     break;                     
                     case '?':
                     if (optopt == 'b')
@@ -255,20 +259,31 @@
                     abort ();
                     } 
             }//if no book dir exit
+
             if( book_dir == NULL) {
                 printf("must set book_dir\n");
                 exit(2);
-            }//setdefault values if not set
-            if( epsFlag == false) epsN = 7;
-            if( repsFlag == false) repsN = .07;
-            if( verbose >= 1)printf("options selected \nverbose= %d eps %d reps %f bookdir %s remergeOpt=%d\n",verbose,epsN,repsN,book_dir,remergeOpt);
-            
+            }
+
             init_ocropus_components(); // used for ocropus to work
             init_glfmaps();
 
             autodel<IBookStore> bookstore;
             make_component(bookstore,cbookstore);
             bookstore->setPrefix(book_dir);
+
+            //provide option for only seg2bbox to be run
+            if (just_run_seg2bbox == true) {
+                printf("running seg2bbox, and no token clustering\n");
+                seg2bbox(book_dir,*bookstore,verbose);
+                exit(0);
+            }
+            //setdefault values if not set
+            if( epsFlag == false) epsN = 7;
+            if( repsFlag == false) repsN = .07;
+            if( verbose >= 1)printf("options selected \nverbose= %d eps %d reps %f bookdir %s remergeOpt=%d\n",verbose,epsN,repsN,book_dir,remergeOpt);
+            
+
             
             if( verbose >= 1)printf("running on %s\n",book_dir);
             if( verbose >= 1)printf("prefix set number of pages=%d\n",bookstore->numberOfPages());

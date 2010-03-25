@@ -12,6 +12,7 @@ def main(sysargv):
     clustercommand = []
     pdfgencommand = []
     bookFileName = ""
+    verbose = 1
     # parse command line options
     if len(sysargv) == 1:
         usage(sysargv[0])
@@ -72,9 +73,6 @@ def main(sysargv):
         if o in ("-S","--seg2bbox"):
             clustercommand.append(" -S ")  
 
-    print "cluster command","".join(clustercommand)
-    print "pdf command","".join(pdfgencommand)
-
     outputLog = str(bookFileName)+"-log"
     #directory = inputFile.split(".")[0]+"-book"
     #pdfOUT = inputFile.split(".")[0]+"-OUT.pdf"
@@ -97,9 +95,14 @@ def main(sysargv):
   
     #prep clustering statement
     clustercommand = "binned-inter %s" % ("".join(clustercommand))
+    if(pdfOutputType == 2):
+        clustercommand = "binned-inter -b %s -v %d -J" % (bookDir,verbose) 
 
     #prep pdf gen statement
     pdfcommand = "ocro2pdf.py %s" % ("".join(pdfgencommand))
+
+    print "cluster command","".join(clustercommand)
+    print "pdf command","".join(pdfgencommand)
 
     start = time.time()
 
