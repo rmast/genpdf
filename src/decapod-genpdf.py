@@ -118,7 +118,7 @@ def main(sysargv):
 
     #run clustering
     # FIXME:check if this works
-    if(type==3):
+    if(type==3 or type==2):
         print "running clustering"
         os.system(clustercommand)
 
