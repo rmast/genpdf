@@ -610,6 +610,20 @@ int binnednn::countTotalClasses() {
     return total;
 }
 
+//outputs how many images each token represents
+void binnednn::tokenCounts(const char *fn) {
+    int count,tokenID;
+    char fnName[128];
+    sprintf(fnName,"%s/tokenCounts.txt",fn);
+    FILE *file = fopen(fnName,"w");
+    for(int iOut=0;iOut<bins.length();iOut++) for (int iIn=0;iIn< bins.ref(iOut).length();iIn++){
+        tokenID = bins[iOut][iIn].get_tokenID();
+        count = bins[iOut][iIn].getClassesLength();
+        fprintf(file,"%d\t%d\n",tokenID,count);
+    }
+    fclose(file);
+}
+
 // outputs debug info
 void binnednn::maxToken() {
     int max = 0;

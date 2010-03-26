@@ -39,16 +39,16 @@ def readFile(fn):
         f.close()
         return tmp;
     except UnicodeDecodeError:
-        print "Error reading file ", fn
+        print "[err] Error reading file ", fn
         return []
     except IOError:
-	print "Warning: file could not be opened: ",fn
+	print "[warn] file could not be opened: ",fn
 	return []
 
 #reads locations of where each image belongs on page (bounding box)
 def readBoxFile(fn):
     if os.path.exists(fn)== False:
-	print "Warning: file could not be opened: ",fn
+	print "[warn] file could not be opened: ",fn
 	return []
     f    = file(fn, "r")
     data = [line.split() for line in f]
@@ -64,7 +64,7 @@ def readBoxFile(fn):
 #reads the output from binned clustering
 def readTokenIDFile(fn):
     if os.path.exists(fn) == False:
-	print "Warning: file could not be opened: ",fn
+	print "[warn] file could not be opened: ",fn
 	return []
     f    = file(fn, "r")
     data = [line.split() for line in f]
@@ -81,7 +81,7 @@ class Book:
     # default constructor
     def __init__(self):
         self.bookDir  = "" # path of the book directory
-        self.pageSize = [21.0,29.7] # paper size in cm FIXME joost, paramatize
+        self.pageSize = [21.0,29.7] # paper size in cm
         self.tokenDir = "" # token directory
         self.tokens   = {} # token [ID, file name]
 
@@ -101,9 +101,11 @@ class Book:
         # filelist is unsorted, that's why pages need to be sorted afterwards
         for f in fileList:
             if(len(f)==8 and f[len(f)-4:len(f)] == ".png"): # FIXME joost,
-		if(os.path.exists(self.bookDir+"/"+f.split(".")[0])): #whitespace page check
-                	p = Page(self.bookDir+"/"+f)
-                	self.pages.append(p)
+                # check at this stage if the image eists
+                # subDir does not exist if ocropus isn't run but we still want to generate image only PDF
+                if(os.path.exists(self.bookDir+"/"+f.split(".")[0]+".png")): #whitespace page check
+                    p = Page(self.bookDir+"/"+f)
+                    self.pages.append(p)
         self.sortPages()
         self.readTokens()
     
@@ -118,7 +120,7 @@ class Book:
                     minLine = self.pages[j].number
                     minIndex = j
             if minIndex == -1:
-                print("Book::sortPages: Error sorting the page!")
+                print("[err] Book::sortPages: Error sorting the page!")
                 break
             p = self.pages[minIndex]
             self.pages[minIndex]=self.pages[i]
@@ -127,6 +129,10 @@ class Book:
     
     # read token dir in book structure to book object
     def readTokens(self):
+        # check if token path exists; (may be missing if clustering fails)
+        if (os.path.exists(self.tokenDir) == False):
+            print("[warn] No token directory found in %s" %(self.bookDir))
+            return;
         fileList = os.listdir(self.tokenDir)
         for f in fileList:
             if(f.split(".")[0]):
@@ -146,9 +152,13 @@ class Book:
         
     def checkTokenable(self):
         for page in self.pages:
-            if (page.checkTokenable() == False):
+            if (page.checkTokenable() == False or
+                len(self.tokens) <= 0):
                 return False;
         return True;
+    
+    def checkTokenPresence(self):
+        return (len(self.tokens)>0)
 
 # child of book object, each book has n pages. Corresponds to OCRopus book structure
 class Page:
@@ -170,11 +180,13 @@ class Page:
             self.binImage = imgFN[0:len(imgFN)-4]+".bin.png" # FIXME joost,
             self.lineBoxs = imgFN[0:len(imgFN)-4]+".pseg.txt" # FIXME joost,
             self.pageDir  = imgFN[0:len(imgFN)-4]+"/" # FIXME joost,
+            self.linesPos = [] # position of lines
+            self.lines    = [] # list of lines
           #  self.tseg    = [] # list of tokID
             self.update()
         # output error message
         else:
-            print("Page::fromOcroDir: Error: expected PNG file as input!")
+            print("[err] Page::fromOcroDir: Error: expected PNG file as input!")
             return
     
     # print page information to std out

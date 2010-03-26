@@ -12,6 +12,7 @@ def main(sysargv):
     clustercommand = []
     pdfgencommand = []
     bookFileName = ""
+    verbose = 1
     # parse command line options
     if len(sysargv) == 1:
         usage(sysargv[0])
@@ -40,8 +41,11 @@ def main(sysargv):
         if o in ("-d", "--dir"):
             bookDir = a
             # FIXME: check if this works as expected
-            if (len(a)>0 and a[len(a)-1]!='/'):
-                a = a+'/'
+            if (len(bookDir)>0 and bookDir[len(bookDir)-1]!='/'):
+                bookDir = bookDir+'/'
+            if os.path.exists(bookDir)==True:
+                print("[Error]: bookDir \"%s\" does already exist! Please choose another directory!" %(bookDir))
+                sys.exit(1)
             pdfgencommand.append(" -d %s " % (bookDir))
             clustercommand.append(" -b %s " % (bookDir))
         if o in ("-p", "--pdf"):
@@ -69,68 +73,53 @@ def main(sysargv):
         if o in ("-S","--seg2bbox"):
             clustercommand.append(" -S ")  
 
-    print "cluster command","".join(clustercommand)
-    print "pdf command","".join(pdfgencommand)
-
     outputLog = str(bookFileName)+"-log"
     #directory = inputFile.split(".")[0]+"-book"
     #pdfOUT = inputFile.split(".")[0]+"-OUT.pdf"
-
+    if bookFileName=="":
+        for arg in args:
+            bookFileName += arg + " "
+        
 
     out = open(outputLog, 'w')
-
-#First, we binarize and deskew the input images. This also copies them from their original form into a book-structured directory.
-#$ ocropus-binarize -o book AIM-916/*.png
-## loading AIM-916/img-000.png
-#[info] got 1500 bboxes
-## writing book/0001
-## loading AIM-916/img-001.png
-#[info] got 2023 bboxes
-## writing book/0002
-#...
-
-#Next, we perform page layout analysis and textline extraction. Since the document is single column, we're using a single column layout analysis component. The "-D" flag means that we get a progress window that shows the result of segmentation, but it doesn't stop after each page.
-#$ ocropus-pseg -S SegmentPageByRAST1 -D book/????.png
-# loading book/0001.png
-## loading book/0001.bin.png
-## segmenting
-## writing 26 lines
-#...
-#If you want to check line recognizers interactively, you can run ocropus-showlrecs. You can select different classifiers and language models, look at lines, and inspect the recognition process for individual lines.
-
-#$ ocropus-showlrecs book/????/??????.png
-#For actually running the recognition process, you use ocropus-linerec.
-#$ ocropus-linerec -D book/????/??????.png
-#Finally, you need to put together the outputs into an HTML file. The command for that will be ocropus-xhtml (it's not available yet).
-#$ ocropus-xhtml book/???? > output.html
-
-    #prep ocropus statements
-    book2pages = "ocropus book2pages %s %s" % (bookDir,bookFileName)
-    pages2lines = "ocropus pages2lines %s" % (bookDir) 
-    lines2fsts = "ocropus lines2fsts %s" % (bookDir)
-    fsts2text = "ocropus fsts2text %s" % (bookDir)
-
+    #Deprecated: prep ocropus statements
+    #book2pages = "ocropus book2pages %s %s" % (bookDir,bookFileName)
+    #pages2lines = "ocropus pages2lines %s" % (bookDir)
+    #lines2fsts = "ocropus lines2fsts %s" % (bookDir)
+    #fsts2text = "ocropus fsts2text %s" % (bookDir)
+    
+    # Corresponding ocropy commands. Do not fully work currently.
+    book2pages = "ocropus-binarize -o %s %s" % (bookDir,bookFileName)
+    pages2lines = "ocropus-pseg %s/????.png" % (bookDir) 
+    lines2fsts = "ocropus-linerec %s/????/??????.png" % (bookDir)
+  
     #prep clustering statement
     clustercommand = "binned-inter %s" % ("".join(clustercommand))
+    if(pdfOutputType == 2):
+        clustercommand = "binned-inter -b %s -v %d -J" % (bookDir,verbose) 
 
     #prep pdf gen statement
     pdfcommand = "ocro2pdf.py %s" % ("".join(pdfgencommand))
+
+    print "cluster command","".join(clustercommand)
+    print "pdf command","".join(pdfgencommand)
 
     start = time.time()
 
     #run ocropus pipeline
     print "running ocropus pipeline"
     os.system(book2pages)
-    os.system(pages2lines)
-    os.system(lines2fsts)
-    os.system(fsts2text)
+    if(pdfOutputType > 1):
+        os.system(pages2lines)
+        os.system(lines2fsts)
+        #os.system(fsts2text)
 
     endOCROPUS = time.time()
     print >> out, "Time elapsed OCROPUS= ", endOCROPUS - start, "seconds"
 
     #run clustering
     # FIXME:check if this works
-    if(type==3):
+    if(pdfOutputType==3 or pdfOutputType==2):
         print "running clustering"
         os.system(clustercommand)
 
