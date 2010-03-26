@@ -61,7 +61,7 @@ def convert2ImagePDF(bookDir,pdfFileName,b,pdf):
             pdf.drawInlineImage(img, 0,0,width*cm,height*cm) # use inline as each page is used only once
         if(W/H <= ar):
             height= float(b.pageSize[1])
-            width = height/(W/H)
+            width = height/(H/W)
             if(verbose > 2):
                 print(W/H, ar, width, height)
             pdf.drawInlineImage(img, 0,0,width*cm,height*cm) # use inline as each page is used only once
@@ -93,7 +93,7 @@ def convert2ImageTextPDF(bookDir,pdfFileName,b,pdf):
 
         if(W/H <= ar):
             height= float(b.pageSize[1])
-            width = height/(W/H)
+            width = height/(H/W)
             factor = b.pageSize[1]/H
         resizeW = (1.0/2.54)*width*dpi # width of the image after resizing
         resizeH = (1.0/2.54)*height*dpi # height of the image after resizing 

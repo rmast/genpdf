@@ -205,7 +205,7 @@ class Page:
     # read the page information from the directory structure
     def update(self):
         # get line image list
-	if(not os.path.exists(self.pageDir)): return #ocropus does not genereate dir for whitespace page
+        if(not os.path.exists(self.pageDir)): return #ocropus does not genereate dir for whitespace page
         self.lines = []
         self.linesPos = readBoxFile(self.lineBoxs)
         fileList = os.listdir(self.pageDir)
