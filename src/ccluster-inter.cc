@@ -46,9 +46,7 @@
 
             intarray pageSeg;
             read_image_packed(pageSeg,fnIn);
-            //printf("hello3\n");
             rectarray bboxes;
-            //write_image_packed("bla.png",pageSeg);
             renumber_labels(pageSeg,0);
             bounding_boxes(bboxes, pageSeg);
             //printf("hello4\n");
@@ -281,10 +279,8 @@
             //setdefault values if not set
             if( epsFlag == false) epsN = 7;
             if( repsFlag == false) repsN = .07;
-            if( verbose >= 1)printf("options selected \nverbose= %d eps %d reps %f bookdir %s remergeOpt=%d\n",verbose,epsN,repsN,book_dir,remergeOpt);
-            
 
-            
+            if( verbose >= 1)printf("options selected \nverbose= %d eps %d reps %f bookdir %s remergeOpt=%d\n",verbose,epsN,repsN,book_dir,remergeOpt);
             if( verbose >= 1)printf("running on %s\n",book_dir);
             if( verbose >= 1)printf("prefix set number of pages=%d\n",bookstore->numberOfPages());
             
