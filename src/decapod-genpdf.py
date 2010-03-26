@@ -82,16 +82,16 @@ def main(sysargv):
         
 
     out = open(outputLog, 'w')
-    #prep ocropus statements
-    book2pages = "ocropus book2pages %s %s" % (bookDir,bookFileName)
-    pages2lines = "ocropus pages2lines %s" % (bookDir)
-    lines2fsts = "ocropus lines2fsts %s" % (bookDir)
-    fsts2text = "ocropus fsts2text %s" % (bookDir)
+    #Deprecated: prep ocropus statements
+    #book2pages = "ocropus book2pages %s %s" % (bookDir,bookFileName)
+    #pages2lines = "ocropus pages2lines %s" % (bookDir)
+    #lines2fsts = "ocropus lines2fsts %s" % (bookDir)
+    #fsts2text = "ocropus fsts2text %s" % (bookDir)
     
     # Corresponding ocropy commands. Do not fully work currently.
-    #book2pages = "ocropus-binarize -o %s %s" % (bookDir,bookFileName)
-    #pages2lines = "ocropus-pseg %s" % (bookDir) 
-    #lines2fsts = "ocropus-linerec %s" % (bookDir)
+    book2pages = "ocropus-binarize -o %s %s" % (bookDir,bookFileName)
+    pages2lines = "ocropus-pseg %s/????.png" % (bookDir) 
+    lines2fsts = "ocropus-linerec %s/????/??????.png" % (bookDir)
   
     #prep clustering statement
     clustercommand = "binned-inter %s" % ("".join(clustercommand))
@@ -109,9 +109,10 @@ def main(sysargv):
     #run ocropus pipeline
     print "running ocropus pipeline"
     os.system(book2pages)
-    os.system(pages2lines)
-    os.system(lines2fsts)
-    #os.system(fsts2text)
+    if(pdfOutputType > 1):
+        os.system(pages2lines)
+        os.system(lines2fsts)
+        #os.system(fsts2text)
 
     endOCROPUS = time.time()
     print >> out, "Time elapsed OCROPUS= ", endOCROPUS - start, "seconds"

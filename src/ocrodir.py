@@ -101,9 +101,11 @@ class Book:
         # filelist is unsorted, that's why pages need to be sorted afterwards
         for f in fileList:
             if(len(f)==8 and f[len(f)-4:len(f)] == ".png"): # FIXME joost,
-		if(os.path.exists(self.bookDir+"/"+f.split(".")[0])): #whitespace page check
-                	p = Page(self.bookDir+"/"+f)
-                	self.pages.append(p)
+                # check at this stage if the image eists
+                # subDir does not exist if ocropus isn't run but we still want to generate image only PDF
+                if(os.path.exists(self.bookDir+"/"+f.split(".")[0]+".png")): #whitespace page check
+                    p = Page(self.bookDir+"/"+f)
+                    self.pages.append(p)
         self.sortPages()
         self.readTokens()
     
@@ -178,6 +180,8 @@ class Page:
             self.binImage = imgFN[0:len(imgFN)-4]+".bin.png" # FIXME joost,
             self.lineBoxs = imgFN[0:len(imgFN)-4]+".pseg.txt" # FIXME joost,
             self.pageDir  = imgFN[0:len(imgFN)-4]+"/" # FIXME joost,
+            self.linesPos = [] # position of lines
+            self.lines    = [] # list of lines
           #  self.tseg    = [] # list of tokID
             self.update()
         # output error message
