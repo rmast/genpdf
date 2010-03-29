@@ -47,17 +47,17 @@
             intarray pageSeg;
             read_image_packed(pageSeg,fnIn);
             rectarray bboxes;
-            renumber_labels(pageSeg,0);
+//             renumber_labels(pageSeg,0);
             bounding_boxes(bboxes, pageSeg);
             //printf("hello4\n");
             sprintf(fn,"%s.txt",fn);
             FILE *file = fopen(fn,"w");
             for(int i=0;i<bboxes.length();i++){
-                if(bboxes(i).x1 >= 0 && bboxes(i).y1 >= 0)
-                    fprintf(file,"%d %d %d %d\n",bboxes(i).x0,
+                if(bboxes(i).area() > 0 && bboxes(i).x1 >= 0 && bboxes(i).y1 >= 0)
+                    fprintf(file,"%d %d %d %d %06x\n",bboxes(i).x0,
                     bboxes(i).y0,
                     bboxes(i).x1,
-                    bboxes(i).y1);
+                    bboxes(i).y1,i);
             }
             fclose(file);
             if( verbose >= 1)printf("outputing seg2bbox info for page %d\n",pageno);
@@ -66,7 +66,7 @@
             intarray imgSeg;
             int line = bookstore.getLineId(pageno,lineno);  //hex format 
             if (!bookstore.getLine(imgSeg,pageno,line,"cseg")){ //read_image_packed(in,file);
-                if( verbose >= 1) debugf("info","%04d %x: no such cseg\n",pageno,line);
+                if( verbose >= 1) debugf("info","%04d %06x: no such cseg\n",pageno,line);
                 continue;
             }   
             rectarray bboxes;

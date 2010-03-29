@@ -216,8 +216,8 @@ def convert2TokenPDF(bookDir,pdfFileName,b,pdf):
                 tokenIndex = -1;
                 tokenIndex = b.pages[i].lines[j].tokenIDs[k]
                 # FIXME joost,comment XO yO ccPOS
-                X0 = b.pages[i].linesPos[j,0]+b.pages[i].lines[j].ccs[k,0]
-                Y0 = H-(b.pages[i].linesPos[j,1]+b.pages[i].lines[j].ccs[k,1])
+                X0 = b.pages[i].linesPos[j][0]+b.pages[i].lines[j].ccs[k,0]
+                Y0 = H-(b.pages[i].linesPos[j][1]+b.pages[i].lines[j].ccs[k,1])
                 ccPos = b.pages[i].linesPos[j] + b.pages[i].lines[j].ccs[k]
 
                 # width and height of cc in PDF units
