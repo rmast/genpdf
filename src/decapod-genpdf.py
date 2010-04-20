@@ -13,6 +13,7 @@ def main(sysargv):
     pdfgencommand = []
     bookFileName = ""
     verbose = 1
+    pdfOutputType = 1
     # parse command line options
     if len(sysargv) == 1:
         usage(sysargv[0])
