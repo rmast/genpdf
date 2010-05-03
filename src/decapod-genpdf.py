@@ -129,6 +129,7 @@ def main(sysargv):
 
     #run pdf gen
     print "generating pdf"
+    print pdfcommand
     os.system(pdfcommand)
     endGenPDF = time.time()
     print >> out, "Time elapsed pdfGen= ",endGenPDF - endClustering, "seconds"
