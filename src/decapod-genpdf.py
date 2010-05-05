@@ -4,16 +4,17 @@ import os
 import sys
 import time
 import getopt
-
+import shlex, subprocess
 
 msg = '\nusage: python runPipeLine.py input file in pdf form \n\nworks iff "." only appears prior ext\nntake an input file and run ocropus clustering genPdf'
 
 def main(sysargv):
-    clustercommand = []
-    pdfgencommand = []
-    bookFileName = ""
-    verbose = 1
-    pdfOutputType = 1
+    clustercommand = [] # command called for token clustering
+    pdfgencommand = []  # command called for PDF generation
+    bookFileName = ""   # multipage TIFF file for which the PDF is generated
+    verbose = 1         # output debuging information
+    pdfOutputType = 1   # default PDF type: image only
+    pdfFileName = ""    # filename of the resultine PDF
     # parse command line options
     if len(sysargv) == 1:
         usage(sysargv[0])
@@ -35,13 +36,19 @@ def main(sysargv):
             pdfgencommand.append(" -t %d " % (pdfOutputType))
         if o in ("-W", "--width"):
             pageWidth = float(a)
+            if (pageWidth < 0):
+                print("[Error]: pageWidth %f < 0!" %(pageWidth))
+                sys.exit(1)
             pdfgencommand.append(" -W %f " % (pageWidth))
         if o in ("-H", "--height"):
             pageHeight = float(a)
+            if (pageHeight < 0):
+                print("[Error]: pageHeight %f < 0!" %(pageHeight))
+                sys.exit(1)
             pdfgencommand.append(" -H %f " % (pageHeight))
         if o in ("-d", "--dir"):
             bookDir = a
-            # FIXME: check if this works as expected
+            # add "/" to bookDir if necessary
             if (len(bookDir)>0 and bookDir[len(bookDir)-1]!='/'):
                 bookDir = bookDir+'/'
             if os.path.exists(bookDir)==True:
@@ -75,21 +82,23 @@ def main(sysargv):
             clustercommand.append(" -S ")  
 
     outputLog = str(bookFileName)+"-log"
-    #directory = inputFile.split(".")[0]+"-book"
-    #pdfOUT = inputFile.split(".")[0]+"-OUT.pdf"
+    # if no bookFileName is given use all the arg images as input
     if bookFileName=="":
         for arg in args:
             bookFileName += arg + " "
-        
+    
+    if (bookFileName=="" or pdfFileName=="" or bookDir==""):
+        print("[Error]: bookFilename, pdfFileName or bookDir not defined! (\"%s\", \"%s\", \"%s\")" %(bookFileName, pdfFileName,bookDir))
+        sys.exit(1)
 
     out = open(outputLog, 'w')
-    #Deprecated: prep ocropus statements
+    #Deprecated: old ocropus commands
     #book2pages = "ocropus book2pages %s %s" % (bookDir,bookFileName)
     #pages2lines = "ocropus pages2lines %s" % (bookDir)
     #lines2fsts = "ocropus lines2fsts %s" % (bookDir)
     #fsts2text = "ocropus fsts2text %s" % (bookDir)
     
-    # Corresponding ocropy commands. Do not fully work currently.
+    # Corresponding ocropy commands.
     book2pages = "ocropus-binarize -o %s %s" % (bookDir,bookFileName)
     pages2lines = "ocropus-pseg %s/????.png" % (bookDir) 
     lines2fsts = "ocropus-linerec %s/????/??????.png" % (bookDir)
@@ -102,43 +111,79 @@ def main(sysargv):
     #prep pdf gen statement
     pdfcommand = "ocro2pdf.py %s" % ("".join(pdfgencommand))
 
-    print "cluster command","".join(clustercommand)
-    print "pdf command","".join(pdfgencommand)
+    if verbose>1:
+        print "genBook command: %s" %(book2pages)
+        print "pseg    command: %s" %(pages2lines)
+        print "fsts    command: %s" %(lines2fsts)
+        print "cluster command:","".join(clustercommand)
+        print "pdf     command:","".join(pdfgencommand)
 
     start = time.time()
 
     #run ocropus pipeline
-    print "running ocropus pipeline"
-    os.system(book2pages)
+    if verbose>1:
+        print "running ocropus pipeline"
+    
+    cmd = shlex.split(book2pages)
+    retCode = subprocess.call(cmd)
+    if (retCode != 0):
+        print "[error] generating book structure did not work as expected! (%s)" %(book2pages)
+        sys.exit(2) #unknown error
+    #os.system(book2pages)
+    
     if(pdfOutputType > 1):
-        os.system(pages2lines)
-        os.system(lines2fsts)
+        cmd = shlex.split(pages2lines)
+        retCode = subprocess.call(cmd)
+        if (retCode != 0):
+            print "[error] page segmentation did not work as expected! (%s)" %(pages2lines)
+        sys.exit(2) #unknown error
+        #os.system(pages2lines)
+
+        cmd = shlex.split(lines2fsts)
+        retCode = subprocess.call(cmd)
+        if (retCode != 0):
+            print "[error] line recognition did not work as expected! (%s)" %(lines2fsts)
+        #os.system(lines2fsts)
+
         #os.system(fsts2text)
 
     endOCROPUS = time.time()
-    print >> out, "Time elapsed OCROPUS= ", endOCROPUS - start, "seconds"
+    if verbose>1:
+        print >> out, "Time elapsed OCROPUS= ", endOCROPUS - start, "seconds"
 
     #run clustering
-    # FIXME:check if this works
-    if(pdfOutputType==3 or pdfOutputType==2):
-        print "running clustering"
-        os.system(clustercommand)
+    if(pdfOutputType==2 or pdfOutputType==3):
+        if verbose>1:
+            print "running clustering"
+        cmd = shlex.split(clustercommand)
+        retCode = subprocess.call(cmd)
+        if (retCode != 0):
+            print "[error] clustering did not work as expected! (%s)" %(clustercommand)
+        #os.system(clustercommand)
 
     endClustering = time.time()
-    print >> out, "Time elapsed clustering= ",endClustering - endOCROPUS, "seconds"
+    if verbose>1:
+        print >> out, "Time elapsed clustering= ",endClustering - endOCROPUS, "seconds"
 
     #run pdf gen
-    print "generating pdf"
-    print pdfcommand
-    os.system(pdfcommand)
+    if verbose>1:
+        print "generating pdf"
+    
+    cmd = shlex.split(pdfcommand)
+    retCode = subprocess.call(cmd)
+    if (retCode != 0):
+        print "[error] PDF generation did not work as expected! (%s)" %(pdfcommand)
+    #os.system(pdfcommand)
+    
     endGenPDF = time.time()
-    print >> out, "Time elapsed pdfGen= ",endGenPDF - endClustering, "seconds"
-    print >> out, "total time elapsed =",endGenPDF - start,"seconds"
+    if verbose>1:
+        print >> out, "Time elapsed pdfGen= ",endGenPDF - endClustering, "seconds"
+        print >> out, "total time elapsed =",endGenPDF - start,"seconds"
 
 
 def usage(progName):
     print "\n%s [OPTIONS]\n\n"\
-	  "   -b  --book	 name of multipage tiff file\n"\
+	      "   -b  --book         name of multipage tiff file\n"\
           "   -d, --dir          Ocropus Directory to be converted\n"\
           "   -p, --pdf          PDF File that will be generated\n"\
           " Options:\n"\
@@ -151,11 +196,11 @@ def usage(progName):
           "   -W, --width:       width of the PDF page [in cm] [default = 21.0]:\n"\
           "   -H, --height:      height of the PDF page [in cm] [default = 29.7]:\n"\
           "   -r, --resolution:  resolution of the images in the PDF [default = 200dpi]\n"\
-	  "   -R --remerge 	 remerge token clusters [default = false] \n"\
-	  "   -S, --seg2bbox      suppresses generating files necessary to generate PDF \n"\
-	  "   -C, --enforceCSEG   characters can only match if there CSEG labels are equal \n"\
-          "   -e, --eps           matching threshold [default=7] \n"\
-	  "   -s, --reps          matching threshold [default=.07] \n"\
+          "   -R --remerge       remerge token clusters [default = false] \n"\
+          "   -S, --seg2bbox     suppresses generating files necessary to generate PDF \n"\
+          "   -C, --enforceCSEG  characters can only match if there CSEG labels are equal \n"\
+          "   -e, --eps          matching threshold [default=7] \n"\
+          "   -s, --reps         matching threshold [default=.07] \n"\
 
 
 if __name__ == "__main__":

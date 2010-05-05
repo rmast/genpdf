@@ -28,9 +28,9 @@ from ocrodir import *
 import codecs
 from numpy import *
 from PIL import Image
-from reportlab.pdfgen import canvas
-from reportlab.lib.units import cm
-from reportlab.lib.units import inch
+#from reportlab.pdfgen import canvas
+#from reportlab.lib.units import cm
+#from reportlab.lib.units import inch
 from cStringIO import StringIO # "cStringIO" is faster, but if you need to subclass, use "StringIO" 
 from multiprocessing import Process, Queue, Pool
 import shlex, subprocess
