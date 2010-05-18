@@ -9,20 +9,6 @@ import shlex, subprocess, tempfile
 
 def main(sysargv):
     
-#if o in ("-h", "--help"):
-#if o in ("-t", "--type"):
-#if o in ("-W", "--width"):
-#if o in ("-H", "--height"):
-#if o in ("-d", "--dir"):
-#if o in ("-p", "--pdf"):
-#if o in ("-v", "--verbose"):
-#if o in ("-r", "--resolution"):
-#if o in ("-b", "--book"):
-#if o in ("-e","--eps"):
-#if o in ("-s","--reps"):
-#if o in ("-R","--remerge"):
-#if o in ("-C","--enforceCSEG"):
-#if o in ("-S","--seg2bbox"):
     fn     = "../data/test-image.jpg"
     tmpDir = tempfile.mkdtemp()+"/"
     os.rmdir(tmpDir)
@@ -39,17 +25,69 @@ def main(sysargv):
     print "========== Running test 05 ==========" 
     retExDir  = subprocess.call(["./decapod-genpdf.py","-d",tmpDir,"-p",outFn,fn])
     
+    
+    print "========== Running test 06 ==========" 
     tmpDir = tempfile.mkdtemp()+"/"
     os.rmdir(tmpDir)
     outFn  = tmpDir + "out.pdf"
-    print "========== Running test 06 ==========" 
     retWH     = subprocess.call(["./decapod-genpdf.py","-d",tmpDir,"-p",outFn,"-W","1","-H","1",fn])
 
+    
+    print "========== Running test 07 ==========" 
     tmpDir = tempfile.mkdtemp()+"/"
     os.rmdir(tmpDir)
     outFn  = tmpDir + "out.pdf"
-    print "========== Running test 07 ==========" 
     retNegWH  = subprocess.call(["./decapod-genpdf.py","-d",tmpDir,"-p",outFn,"-W","-1","-H","-1",fn])
+    
+    
+    print "========== Running test 08 ==========" 
+    tmpDir = tempfile.mkdtemp()+"/"
+    os.rmdir(tmpDir)
+    outFn  = tmpDir + "out.pdf"
+    retquadWH  = subprocess.call(["./decapod-genpdf.py","-d",tmpDir,"-p",outFn,"-W","10.0","-H","10.0",fn])
+    
+    print "========== Running test 09 ==========" 
+    tmpDir = tempfile.mkdtemp()+"/"
+    os.rmdir(tmpDir)
+    outFn  = tmpDir + "out.pdf"
+    retasyWH1  = subprocess.call(["./decapod-genpdf.py","-d",tmpDir,"-p",outFn,"-W","100.0","-H","10.0",fn])
+    
+    print "========== Running test 10 ==========" 
+    tmpDir = tempfile.mkdtemp()+"/"
+    os.rmdir(tmpDir)
+    outFn  = tmpDir + "out.pdf"
+    retasyWH2  = subprocess.call(["./decapod-genpdf.py","-d",tmpDir,"-p",outFn,"-W","10.0","-H","100.0",fn])
+    
+    print "========== Running test 11 ==========" 
+    tmpDir = tempfile.mkdtemp()+"/"
+    os.rmdir(tmpDir)
+    outFn  = tmpDir + "out.pdf"
+    retNegRes  = subprocess.call(["./decapod-genpdf.py","-d",tmpDir,"-p",outFn,"-r","-300","-t","2",fn])
+    
+    print "========== Running test 12 ==========" 
+    tmpDir = tempfile.mkdtemp()+"/"
+    os.rmdir(tmpDir)
+    outFn  = tmpDir + "out.pdf"
+    retZeroRes  = subprocess.call(["./decapod-genpdf.py","-d",tmpDir,"-p",outFn,"-r","0","-t","2",fn])
+    
+    print "========== Running test 13 ==========" 
+    tmpDir = tempfile.mkdtemp()+"/"
+    os.rmdir(tmpDir)
+    outFn  = tmpDir + "out.pdf"
+    retSmallRes  = subprocess.call(["./decapod-genpdf.py","-d",tmpDir,"-p",outFn,"-r","10","-t","2",fn])
+    
+    print "========== Running test 14 ==========" 
+    tmpDir = tempfile.mkdtemp()+"/"
+    os.rmdir(tmpDir)
+    outFn  = tmpDir + "out.pdf"
+    retHighRes  = subprocess.call(["./decapod-genpdf.py","-d",tmpDir,"-p",outFn,"-r","600","-t","2",fn])
+    
+    print "========== Running test 15 ==========" 
+    tmpDir = tempfile.mkdtemp()+"/"
+    os.rmdir(tmpDir)
+    outFn  = tmpDir + "out.pdf"
+    retType3  = subprocess.call(["./decapod-genpdf.py","-d",tmpDir,"-p",outFn,"-r","300","-t","3",fn])
+    
     
     print "========== REPORT =========="
     print "Test  is  exp.      details"
@@ -58,8 +96,16 @@ def main(sysargv):
     print "03    [%d] [2]  testing with wrong file name options" %(retWrgFn)
     print "04    [%d] [0]  testing with minimal options" %(retMinOpt)
     print "05    [%d] [1]  testing with existing book directory" %(retExDir)
-    print "06    [%d] [0]  testing with different width and height directory" %(retWH)
-    print "07    [%d] [1]  testing with negative width and height directory" %(retNegWH)
+    print "06    [%d] [0]  testing with different width and height" %(retWH)
+    print "07    [%d] [1]  testing with negative width and height" %(retNegWH)
+    print "08    [%d] [0]  testing with quadratic page size" %(retquadWH)
+    print "09    [%d] [0]  testing with very wide page width" %(retasyWH1)
+    print "10    [%d] [0]  testing with very heigh page height" %(retasyWH2)
+    print "11    [%d] [0]  testing with negative resolution" %(retNegRes)
+    print "12    [%d] [0]  testing with zero resolution" %(retZeroRes)
+    print "13    [%d] [0]  testing with small resolution (10dpi)" %(retSmallRes)
+    print "14    [%d] [0]  testing with high resolution (600dpi)" %(retHighRes)
+    print "15    [%d] [0]  testing with type 3 as output" %(retType3)
 
 if __name__ == "__main__":
     main(sys.argv)

@@ -40,9 +40,7 @@ verbose     = 0         # output debugging information
 dpi         = 200       # resolution of the ouput images in the pdf
 tempLogDir  = "."       # directory where the output log will be saved
 
-# ========= ImagePDF =========
-
-
+# FIXME: check PDFs for reasonable file size
 
 
 # read args, opts and process

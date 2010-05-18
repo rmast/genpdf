@@ -1,27 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+
 import os
 import sys
 import time
 import getopt
 import shlex, subprocess
+import glob
 
 msg = '\nusage: python runPipeLine.py input file in pdf form \n\nworks iff "." only appears prior ext\nntake an input file and run ocropus clustering genPdf'
 
 def main(sysargv):
-    clustercommand = [] # command called for token clustering
-    pdfgencommand = []  # command called for PDF generation
+    clustercommand = ["binned-inter"] # command called for token clustering
+    pdfgencommand = ["ocro2pdf.py"]   # command called for PDF generation
+    book2pages = ["ocropus-binarize"] # command called for generating the book Dir and binarization
     bookFileName = ""   # multipage TIFF file for which the PDF is generated
-    verbose = 1         # output debuging information
+    verbose = 2         # output debuging information
     pdfOutputType = 1   # default PDF type: image only
     pdfFileName = ""    # filename of the resultine PDF
+    dpi=300             # default resolution
+    verbose=0           # default: be not verbose at all
     # parse command line options
     if len(sysargv) == 1:
         usage(sysargv[0])
         sys.exit(0)        
     try:
         optlist, args = getopt.getopt(sysargv[1:], 'hb:t:d:p:W:H:e:s:RCSv:r:', ['help','book=','type=','dir=','pdf=','width=','height=',"eps=","reps","remerge","enforceCSEG","seg2bbox",'verbose=','resolution='])
-        #print(optlist, args)
     except getopt.error, msg:
         print msg
         print "for help use --help"
@@ -33,19 +38,22 @@ def main(sysargv):
             sys.exit(0)
         if o in ("-t", "--type"):
             pdfOutputType = int(a)
-            pdfgencommand.append(" -t %d " % (pdfOutputType))
+            pdfgencommand.append("-t")
+            pdfgencommand.append("%d" %(pdfOutputType))
         if o in ("-W", "--width"):
             pageWidth = float(a)
             if (pageWidth < 0):
                 print("[Error]: pageWidth %f < 0!" %(pageWidth))
                 sys.exit(1)
-            pdfgencommand.append(" -W %f " % (pageWidth))
+            pdfgencommand.append("-W")
+            pdfgencommand.append("%f" %(pageWidth))
         if o in ("-H", "--height"):
             pageHeight = float(a)
             if (pageHeight < 0):
                 print("[Error]: pageHeight %f < 0!" %(pageHeight))
                 sys.exit(1)
-            pdfgencommand.append(" -H %f " % (pageHeight))
+            pdfgencommand.append("-H")
+            pdfgencommand.append("%f" %(pageHeight))
         if o in ("-d", "--dir"):
             bookDir = a
             # add "/" to bookDir if necessary
@@ -54,132 +62,146 @@ def main(sysargv):
             if os.path.exists(bookDir)==True:
                 print("[Error]: bookDir \"%s\" does already exist! Please choose another directory!" %(bookDir))
                 sys.exit(1)
-            pdfgencommand.append(" -d %s " % (bookDir))
-            clustercommand.append(" -b %s " % (bookDir))
+            pdfgencommand.append("-d")
+            pdfgencommand.append("%s" %(bookDir))
+            clustercommand.append("-b")
+            clustercommand.append("%s" %(bookDir))
         if o in ("-p", "--pdf"):
             pdfFileName = a
-            pdfgencommand.append(" -p %s " % (pdfFileName))
+            pdfgencommand.append("-p")
+            pdfgencommand.append("%s" %(pdfFileName))
         if o in ("-v", "--verbose"):
             verbose = int(a)
-            clustercommand.append(" -v %d " % (verbose))
-            pdfgencommand.append(" -v %d " % (verbose))
+            clustercommand.append("-v")
+            clustercommand.append("%d" %(verbose))
+            pdfgencommand.append("-v")
+            pdfgencommand.append("%d" %(verbose))
         if o in ("-r", "--resolution"):
             dpi = int(a)
-            pdfgencommand.append(" -r %d " (dpi))
+            if (dpi==0):
+                print("[Warn]: Resolution set to zero! Changed to 300 dpi!")
+                dpi=300
+            if (dpi<0):
+                dpi = abs(dpi)
+                print("[Warn]: Resolution set to < 0! Changed to %d dpi!" %(dpi))
+            if (dpi>600):
+                dpi = abs(dpi)
+                print("[Warn]: Resolution set to > 600! Processing will be slow and may crash! Use a lower resolution!")
+            pdfgencommand.append("-r")
+            pdfgencommand.append("%d" %(dpi))
         if o in ("-b", "--book"):
-            bookFileName = a
+            book2pages.append("-o")
+            book2pages.append("%s" %(a))
+        #FIXME: Micheal: we should hide these parameters as far as possible
         if o in ("-e","--eps"):
             eps = int(a)
-            clustercommand.append(" -e %d " % (eps) )
+            clustercommand.append("-e")
+            clustercommand.append("%d" %(eps))
         if o in ("-s","--reps"):
             reps = float(a)
-            clustercommand.append( " -r %f " % (reps))
+            clustercommand.append("-r")
+            clustercommand.append("%f" %(reps))
         if o in ("-R","--remerge"):
-            clustercommand.append(" -R ")
+            clustercommand.append("-R")
         if o in ("-C","--enforceCSEG"):
-            clustercommand.append(" -C ")
+            clustercommand.append("-C")
         if o in ("-S","--seg2bbox"):
-            clustercommand.append(" -S ")  
+            clustercommand.append("-S")  
 
-    outputLog = str(bookFileName)+"-log"
+    ## ===== PREPARE COMMANDS ===== ##
     # if no bookFileName is given use all the arg images as input
-    if bookFileName=="":
-        for arg in args:
-            bookFileName += arg + " "
-    
-    if (bookFileName=="" or pdfFileName=="" or bookDir==""):
-        print("[Error]: bookFilename, pdfFileName or bookDir not defined! (\"%s\", \"%s\", \"%s\")" %(bookFileName, pdfFileName,bookDir))
-        sys.exit(1)
+    if len(book2pages)==1:
+        book2pages = args
+        book2pages.insert(0,"ocropus-binarize")  # insert command string
+        book2pages.insert(1,"-o")                # insert output option string
+        book2pages.insert(2,"%s" %(bookDir))
 
-    out = open(outputLog, 'w')
-    #Deprecated: old ocropus commands
-    #book2pages = "ocropus book2pages %s %s" % (bookDir,bookFileName)
-    #pages2lines = "ocropus pages2lines %s" % (bookDir)
-    #lines2fsts = "ocropus lines2fsts %s" % (bookDir)
-    #fsts2text = "ocropus fsts2text %s" % (bookDir)
-    
-    # Corresponding ocropy commands.
-    book2pages = "ocropus-binarize -o %s %s" % (bookDir,bookFileName)
-    pages2lines = "ocropus-pseg %s/????.png" % (bookDir) 
-    lines2fsts = "ocropus-linerec %s/????/??????.png" % (bookDir)
-  
-    #prep clustering statement
-    clustercommand = "binned-inter %s" % ("".join(clustercommand))
     if(pdfOutputType == 2):
-        clustercommand = "binned-inter -b %s -v %d -J" % (bookDir,verbose) 
-
-    #prep pdf gen statement
-    pdfcommand = "ocro2pdf.py %s" % ("".join(pdfgencommand))
+        clustercommand = ["binned-inter","-b","%s" %(bookDir),"-v","%d" %(verbose),"-J"]
 
     if verbose>1:
-        print "genBook command: %s" %(book2pages)
-        print "pseg    command: %s" %(pages2lines)
-        print "fsts    command: %s" %(lines2fsts)
-        print "cluster command:","".join(clustercommand)
-        print "pdf     command:","".join(pdfgencommand)
+        print "[Info]: genBook command: %s" %(book2pages)
+        print "[Info]: cluster command: %s" %(clustercommand)
+        print "[Info]: pdf     command: %s" %(pdfgencommand)
 
     start = time.time()
 
+    if (len(book2pages)<3 or pdfFileName=="" or bookDir==""):
+        print("[Error]: bookFilename, pdfFileName or bookDir not defined! (\"%s\", \"%s\", \"%s\")" %(bookFileName, pdfFileName,bookDir))
+        sys.exit(2)
+
+    ## ===== EXECUTE COMMANDS ===== ##
     #run ocropus pipeline
     if verbose>1:
-        print "running ocropus pipeline"
+        print "[Info]: running ocropus pipeline"
     
-    cmd = shlex.split(book2pages)
-    retCode = subprocess.call(cmd)
+    # run ocropus binarization to generate the book Dir
+    retCode = subprocess.call(book2pages)
     if (retCode != 0):
-        print "[error] generating book structure did not work as expected! (%s)" %(book2pages)
+        print "[Error] generating book structure did not work as expected! (%s)" %(book2pages)
         sys.exit(2) #unknown error
-    #os.system(book2pages)
     
+    endBin = time.time()
+    if verbose>1:
+        print "[Info]: time used by binarization: %d sec" %(endBin - start)
+
     if(pdfOutputType > 1):
-        cmd = shlex.split(pages2lines)
+        fileList = glob.glob("%s/????.png" %(bookDir))
+        cmd = fileList
+        cmd.insert(0,"ocropus-pseg")
         retCode = subprocess.call(cmd)
         if (retCode != 0):
-            print "[error] page segmentation did not work as expected! (%s)" %(pages2lines)
-        sys.exit(2) #unknown error
-        #os.system(pages2lines)
+            print "[Error] page segmentation did not work as expected! (%s)" %(cmd)
+            sys.exit(2) #unknown error
 
-        cmd = shlex.split(lines2fsts)
+        endPSeg = time.time()
+        if verbose>1:
+            print "[Info]: time used by page segmentation: %d sec" %(endPSeg - endBin)
+
+        fileList = glob.glob("%s/????/??????.png" %(bookDir))
+        cmd = fileList
+        cmd.insert(0,"ocropus-linerec")
         retCode = subprocess.call(cmd)
         if (retCode != 0):
-            print "[error] line recognition did not work as expected! (%s)" %(lines2fsts)
-        #os.system(lines2fsts)
+            print "[Error] line recognition did not work as expected! (%s)" %(cmd)
+            sys.exit(2) #unknown error
+        
+        endRecog = time.time()
+        if verbose>1:
+            print "[Info]: time used by text recognizer: %d sec" %(endRecog-endPSeg)
 
-        #os.system(fsts2text)
 
     endOCROPUS = time.time()
     if verbose>1:
-        print >> out, "Time elapsed OCROPUS= ", endOCROPUS - start, "seconds"
+        print "[Info]: time used by OCRopus: %d sec" %(endOCROPUS - start)
 
     #run clustering
     if(pdfOutputType==2 or pdfOutputType==3):
         if verbose>1:
-            print "running clustering"
-        cmd = shlex.split(clustercommand)
-        retCode = subprocess.call(cmd)
+            print "[Info]: running clustering"
+        #cmd = shlex.split(clustercommand)
+        retCode = subprocess.call(clustercommand)
         if (retCode != 0):
-            print "[error] clustering did not work as expected! (%s)" %(clustercommand)
+            print "[Error]: clustering did not work as expected! (%s)" %(clustercommand)
         #os.system(clustercommand)
 
     endClustering = time.time()
     if verbose>1:
-        print >> out, "Time elapsed clustering= ",endClustering - endOCROPUS, "seconds"
+        print "[Info]: time used by clustering: %d sec" %(endClustering - endOCROPUS)
 
     #run pdf gen
     if verbose>1:
-        print "generating pdf"
+        print "[Info]: generating pdf"
     
-    cmd = shlex.split(pdfcommand)
-    retCode = subprocess.call(cmd)
+    retCode = subprocess.call(pdfgencommand)
     if (retCode != 0):
-        print "[error] PDF generation did not work as expected! (%s)" %(pdfcommand)
-    #os.system(pdfcommand)
+        print "[Error] PDF generation did not work as expected! (%s)" %(pdfgencommand)
+        sys.exit(2)
     
     endGenPDF = time.time()
     if verbose>1:
-        print >> out, "Time elapsed pdfGen= ",endGenPDF - endClustering, "seconds"
-        print >> out, "total time elapsed =",endGenPDF - start,"seconds"
-
+        print "[Info]: time used by pdf generation: %d sec" %(endGenPDF - endClustering)
+        print "[Info]: time used for whole process: %d sec" %(endGenPDF - start)
 
 def usage(progName):
     print "\n%s [OPTIONS]\n\n"\

@@ -31,7 +31,11 @@ from PIL import Image
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
 from reportlab.lib.units import inch
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from cStringIO import StringIO # "cStringIO" is faster, but if you need to subclass, use "StringIO" 
+import reportlab.rl_config # used for TTF support
+
 
 # global variables:
 verbose     = 0         # output debugging information
@@ -153,7 +157,6 @@ def convert2ImageTextPDF(bookDir,pdfFileName,b,pdf):
 
 
 # ========= Image with underlaid Text and tokenized image PDF =========
-# FIXME joost, add underlaid text to pdf
 def convert2TokenPDF(bookDir,pdfFileName,b,pdf):
     global dpi
     # aspect/ratio of the pdf page to be generated
@@ -240,30 +243,103 @@ def convert2TokenPDF(bookDir,pdfFileName,b,pdf):
 
 
 
-  # FIXME joost, reintergrate this code
+# ========= Generate PDF with integrated font =========
+def convert2FontPDF(bookDir,pdfFileName,b,pdf):
+    global dpi
+    reportlab.rl_config.warnOnMissingFontGlyphs = 1
+    
+    pdfmetrics.registerFont(TTFont("TEST","TEST.ttf"));
+    pdf.setFont("TEST")
+    pdf.drawString(10,150,"Testfonttext")
+    pdf.showPage() # finish PDF page
+    pdf.save() # save PDF to file
+
+    
+    
+    
+    
+    # aspect/ratio of the pdf page to be generated
+"""    ar = float(b.pageSize[0])/float(b.pageSize[1])
+    tokens=[]
+    for i in range(len(b.pages)):
+        if(verbose > 1):
+            print("Processing page %d" %(b.pages[i].number))
+        # put image
+        img = Image.open(b.pages[i].image)
+        
+        # width and height of the document image in pixel
+        W = float(img.size[0])
+        H = float(img.size[1])
+        # fit document image to PDF page maximizing the displayed area
+        factor = 0.0
+        if(W/H > ar):
+            width = float(b.pageSize[0]) # width of the PDF page in cms
+            height= width/(W/H)
+            factor = b.pageSize[0]/W
+        if(W/H <= ar):
+            height= float(b.pageSize[1])
+            width = height/(W/H)
+            factor = b.pageSize[1]/H
+        resizeW = (1.0/2.54)*width*dpi # width of the image after resizing
+        resizeH = (1.0/2.54)*height*dpi # height of the image after resizing
+        #print("Size before %d x %d and after %d x %d" %(W,H,resizeW,resizeH))
+        
         # put text
-        # change text color to white
-        #pdf.setFillColorRGB(1.0,1.0,1.0)
-        #for j in range(len(b.pages[i].lines)):
-            #numSpaces = 0;
-            #for k in range(len(b.pages[i].lines[j].txt)):
-                #if (b.pages[i].lines[j].txt[k]==unicode(' ')):
-                    #numSpaces += 1
-                    #continue
-                #pdf.setFont("Helvetica", 10)
-                ##print "linePos: ", b.pages[i].linesPos[j]
-                ##print "ccsPos: ",b.pages[i].lines[j].ccs[k-numSpaces]
-                ##print "\"",b.pages[i].lines[j].txt[k-numSpaces],"\""
-                #ccPos = b.pages[i].linesPos[j] + b.pages[i].lines[j].ccs[k-numSpaces]
-                #print ccPos
+        pdf.setFillColorRGB(1.0,1.0,1.0)
+        #print "length of lines",len(b.pages[i].lines)
+        for j in range(len(b.pages[i].lines)): # iterate through all pages
+            if(b.pages[i].lines[j].checkTokenable() == False or
+               b.pages[i].lines[j].checkTextable() == False): continue
+            numSpaces = 0;
+            # first: put text
+            startIndex = 0
+            endIndex   = len(b.pages[i].lines[j].txt)
+            nextSepIndex = startIndex+1;
+            while(startIndex<endIndex):
+                while (nextSepIndex < endIndex and
+                      b.pages[i].lines[j].txt[nextSepIndex] != ' ' and
+                      b.pages[i].lines[j].txt[nextSepIndex] != '\n'):
+                      nextSepIndex = nextSepIndex+1
+                word = ""
+                for k in range(startIndex,nextSepIndex):
+                    word = word + b.pages[i].lines[j].txt[k]
+                wordPos = b.pages[i].linesPos[j] + b.pages[i].lines[j].ccs[startIndex-numSpaces]
+                if(verbose > 3):
+                    print ccPos
                 
+                pdf.drawString(wordPos[0]*factor*cm, 
+                                wordPos[1]*factor*cm, word)
+                numSpaces = numSpaces + 1
+                startIndex = nextSepIndex+1
+                nextSepIndex = startIndex+1
+            # second: put tokens
+            for k in range(len(b.pages[i].lines[j].tokenIDs)): 
+                #check if token is already present
+                tokenIndex = -1;
+                tokenIndex = b.pages[i].lines[j].tokenIDs[k]
+                # FIXME joost,comment XO yO ccPOS
+                X0 = b.pages[i].linesPos[j][0]+b.pages[i].lines[j].ccs[k,0]
+                Y0 = H-(b.pages[i].linesPos[j][1]+b.pages[i].lines[j].ccs[k,1])
+                ccPos = b.pages[i].linesPos[j] + b.pages[i].lines[j].ccs[k]
+
+                # width and height of cc in PDF units
+                ccWidth = factor*(b.pages[i].lines[j].ccs[k,2]-b.pages[i].lines[j].ccs[k,0])
+                ccHeight= factor*(b.pages[i].lines[j].ccs[k,3]-b.pages[i].lines[j].ccs[k,1])
+                
+                ccW = (1.0/2.54)*ccWidth*dpi*0.5
+                ccH = (1.0/2.54)*ccHeight*dpi*0.5
                 #pdf.drawString(ccPos[0]*factor*cm, 
                                #ccPos[1]*factor*cm, b.pages[i].lines[j].txt[k])
-        
-        ## put image over the text
-        #pdf.drawInlineImage(img.resize((resizeW,resizeH)), 0,0,width*cm,height*cm) # use inline as each page is used only once
-        #pdf.showPage() # finish PDF page
-    #pdf.save() # save PDF to sile
+                if(ccW >= 1 and ccH >= 1):
+                    f = b.tokens[tokenIndex]
+                    img = Image.open(f)
+                    pdf.drawInlineImage(img, 
+                                ccPos[0]*factor*cm,ccPos[1]*factor*cm,
+                                ccWidth*cm,ccHeight*cm)
+                
+        pdf.showPage() # finish PDF page
+    pdf.save() # save PDF to file
+"""
 
 
 # read args, opts and process
@@ -336,6 +412,20 @@ def main(sysargv):
             print("[warn] No tokens found! Book structure is not tokenable. Switching to type 2 mode!")
             convert2ImageTextPDF(bookDir,pdfFileName,b,pdf)
     
+    if(pdfOutputType == 4):
+        reportlab.rl_config.warnOnMissingFontGlyphs = 0
+    
+        pdfmetrics.registerFont(TTFont("TEST","TEST.ttf"));
+        pdf.setFont("TEST",32)
+        pdf.drawString(10,150,"Testfonttext Hello World")
+        pdf.showPage() # finish PDF page
+        pdf.save() # save PDF to file
+"""        if(b.checkTokenPresence() == 1):
+            convert2FontPDF(bookDir,pdfFileName,b,pdf)
+        else:
+            print("[warn] No tokens found! Book structure is not tokenable. Switching to type 2 mode!")
+            convert2ImageTextPDF(bookDir,pdfFileName,b,pdf)
+"""
 
 
 # print help information
