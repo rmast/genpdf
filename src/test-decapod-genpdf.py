@@ -88,6 +88,18 @@ def main(sysargv):
     outFn  = tmpDir + "out.pdf"
     retType3  = subprocess.call(["./decapod-genpdf.py","-d",tmpDir,"-p",outFn,"-r","300","-t","3",fn])
     
+    print "========== Running test 16 ==========" 
+    tmpDir = tempfile.mkdtemp()+"/"
+    os.rmdir(tmpDir)
+    outFn  = tmpDir + "out.pdf"
+    retBook  = subprocess.call(["./decapod-genpdf.py","-d",tmpDir,"-p",outFn,"-b",fn])
+
+    print "========== Running test 17 ==========" 
+    tmpDir = tempfile.mkdtemp()+"/"
+    os.rmdir(tmpDir)
+    outFn  = tmpDir + "out.pdf"
+    retMultiple = subprocess.call(["./decapod-genpdf.py","-d",tmpDir,"-p",outFn,fn,fn,fn])
+
     
     print "========== REPORT =========="
     print "Test  is  exp.      details"
@@ -106,6 +118,8 @@ def main(sysargv):
     print "13    [%d] [0]  testing with small resolution (10dpi)" %(retSmallRes)
     print "14    [%d] [0]  testing with high resolution (600dpi)" %(retHighRes)
     print "15    [%d] [0]  testing with type 3 as output" %(retType3)
+    print "16    [%d] [0]  testing with -b bookFile as input" %(retBook)
+    print "17    [%d] [0]  testing with multiple input files" %(retMultiple)
 
 if __name__ == "__main__":
     main(sys.argv)
