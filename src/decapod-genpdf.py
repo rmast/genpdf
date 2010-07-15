@@ -90,7 +90,7 @@ def main(sysargv):
             pdfgencommand.append("-r")
             pdfgencommand.append("%d" %(dpi))
         if o in ("-b", "--book"):
-            book2pages.append("-o")
+            #book2pages.append("-o")
             book2pages.append("%s" %(a))
         #FIXME: Micheal: we should hide these parameters as far as possible
         if o in ("-e","--eps"):
@@ -113,6 +113,10 @@ def main(sysargv):
     if len(book2pages)==1:
         book2pages = args
         book2pages.insert(0,"ocropus-binarize")  # insert command string
+        book2pages.insert(1,"-o")                # insert output option string
+        book2pages.insert(2,"%s" %(bookDir))
+    # if only input file is given, add directory where to put the bookDir
+    if len(book2pages)==2:
         book2pages.insert(1,"-o")                # insert output option string
         book2pages.insert(2,"%s" %(bookDir))
 

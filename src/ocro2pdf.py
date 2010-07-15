@@ -245,6 +245,9 @@ def convert2TokenPDF(bookDir,pdfFileName,b,pdf):
 
 # ========= Generate PDF with integrated font =========
 def convert2FontPDF(bookDir,pdfFileName,b,pdf):
+    print("[error]: Method not yet implemented. Please choose another PDF output type!")
+    return
+    
     global dpi
     reportlab.rl_config.warnOnMissingFontGlyphs = 1
     
@@ -413,19 +416,15 @@ def main(sysargv):
             convert2ImageTextPDF(bookDir,pdfFileName,b,pdf)
     
     if(pdfOutputType == 4):
-        reportlab.rl_config.warnOnMissingFontGlyphs = 0
-    
-        pdfmetrics.registerFont(TTFont("TEST","TEST.ttf"));
-        pdf.setFont("TEST",32)
-        pdf.drawString(10,150,"Testfonttext Hello World")
-        pdf.showPage() # finish PDF page
-        pdf.save() # save PDF to file
-"""        if(b.checkTokenPresence() == 1):
-            convert2FontPDF(bookDir,pdfFileName,b,pdf)
-        else:
-            print("[warn] No tokens found! Book structure is not tokenable. Switching to type 2 mode!")
-            convert2ImageTextPDF(bookDir,pdfFileName,b,pdf)
-"""
+        print("[error]: PDF Type 4 is not yet implemented. Please choose another type!")
+        
+        # example code for generating a PDF with a Font
+        #reportlab.rl_config.warnOnMissingFontGlyphs = 0
+        #pdfmetrics.registerFont(TTFont("TEST","TEST.ttf"));
+        #pdf.setFont("TEST",32)
+        #pdf.drawString(10,150,"Testfonttext Hello World")
+        #pdf.showPage() # finish PDF page
+        #pdf.save() # save PDF to file
 
 
 # print help information
