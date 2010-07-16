@@ -16,11 +16,11 @@ def main(sysargv):
     pdfgencommand = ["ocro2pdf.py"]   # command called for PDF generation
     book2pages = ["ocropus-binarize"] # command called for generating the book Dir and binarization
     bookFileName = ""   # multipage TIFF file for which the PDF is generated
-    verbose = 2         # output debuging information
     pdfOutputType = 1   # default PDF type: image only
     pdfFileName = ""    # filename of the resultine PDF
     dpi=300             # default resolution
     verbose=0           # default: be not verbose at all
+    infoToken = "$@$ExportStatus$@$"
     # parse command line options
     if len(sysargv) == 1:
         usage(sysargv[0])
@@ -121,13 +121,22 @@ def main(sysargv):
         book2pages.insert(2,"%s" %(bookDir))
 
     if(pdfOutputType == 2):
-        clustercommand = ["binned-inter","-b","%s" %(bookDir),"-v","%d" %(verbose),"-J"]
+        clustercommand = ["binned-inter","-b","%s" %(bookDir),"-v","%d" %(verbose)]
 
     if verbose>1:
         print "[Info]: genBook command: %s" %(book2pages)
         print "[Info]: cluster command: %s" %(clustercommand)
         print "[Info]: pdf     command: %s" %(pdfgencommand)
 
+    if pdfOutputType == 1:
+        print infoToken+"['pdfgen']"
+    if pdfOutputType == 2:
+        print infoToken+"['book2pages','pseg','linerec','clustering','pdfgen']"
+    if pdfOutputType == 3:
+        print infoToken+"['book2pages','pseg','linerec','clustering','pdfgen']"
+    if pdfOutputType == 4:
+        print infoToken+"['book2pages','pseg','linerec','clustering','pdfgen']"       
+    
     start = time.time()
 
     if (len(book2pages)<3 or pdfFileName=="" or bookDir==""):
@@ -146,6 +155,7 @@ def main(sysargv):
         sys.exit(2) #unknown error
     
     endBin = time.time()
+    print infoToken+"processComplete:book2pages"
     if verbose>1:
         print "[Info]: time used by binarization: %d sec" %(endBin - start)
 
@@ -159,6 +169,7 @@ def main(sysargv):
             sys.exit(2) #unknown error
 
         endPSeg = time.time()
+        print infoToken+"processComplete:pseg"
         if verbose>1:
             print "[Info]: time used by page segmentation: %d sec" %(endPSeg - endBin)
 
@@ -171,6 +182,7 @@ def main(sysargv):
             sys.exit(2) #unknown error
         
         endRecog = time.time()
+        print infoToken+"processComplete:linerec"        
         if verbose>1:
             print "[Info]: time used by text recognizer: %d sec" %(endRecog-endPSeg)
 
@@ -188,7 +200,7 @@ def main(sysargv):
         if (retCode != 0):
             print "[Error]: clustering did not work as expected! (%s)" %(clustercommand)
         #os.system(clustercommand)
-
+    print infoToken+"processComplete:clustering"
     endClustering = time.time()
     if verbose>1:
         print "[Info]: time used by clustering: %d sec" %(endClustering - endOCROPUS)
@@ -203,6 +215,7 @@ def main(sysargv):
         sys.exit(2)
     
     endGenPDF = time.time()
+    print infoToken+"processComplete:genpdf"
     if verbose>1:
         print "[Info]: time used by pdf generation: %d sec" %(endGenPDF - endClustering)
         print "[Info]: time used for whole process: %d sec" %(endGenPDF - start)
@@ -235,3 +248,4 @@ if __name__ == "__main__":
 
 
  
+
