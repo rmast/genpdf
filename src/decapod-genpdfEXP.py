@@ -14,7 +14,7 @@ msg = '\nusage: python runPipeLine.py input file in pdf form \n\nworks iff "." o
 def main(sysargv):
     clustercommand = ["binned-inter"] # command called for token clustering
     pdfgencommand = ["ocro2pdf.py"]   # command called for PDF generation
-    book2pages = ["ocropus","book2pages"] # command called for generating the book Dir and binarization
+    book2pages = ["ocropus-binarize"] # command called for generating the book Dir and binarization
     bookFileName = ""   # multipage TIFF file for which the PDF is generated
     pdfOutputType = 1   # default PDF type: image only
     pdfFileName = ""    # filename of the resultine PDF
@@ -110,17 +110,15 @@ def main(sysargv):
 
     ## ===== PREPARE COMMANDS ===== ##
     # if no bookFileName is given use all the arg images as input
-    if len(book2pages) == 2:
-        book2pages = args #all remaining args
-        book2pages.insert(0,"ocropus")  # insert command string
-        book2pages.insert(1,"book2pages")               
-        book2pages.insert(2,"%s" %(bookDir))  # insert output book structure name
-    elif len(book2pages) == 3:
-        book2pages.insert(2,"%s" %(bookDir))  # insert output book structure name
-        
-    pages2lines = ['ocropus','pages2lines',bookDir] 
-    lines2fsts = ['ocropus','lines2fsts',bookDir] 
-    fsts2text = ['ocropus','fsts2text',bookDir]
+    if len(book2pages)==1:
+        book2pages = args
+        book2pages.insert(0,"ocropus-binarize")  # insert command string
+        book2pages.insert(1,"-o")                # insert output option string
+        book2pages.insert(2,"%s" %(bookDir))
+    # if only input file is given, add directory where to put the bookDir
+    if len(book2pages)==2:
+        book2pages.insert(1,"-o")                # insert output option string
+        book2pages.insert(2,"%s" %(bookDir))
 
     if(pdfOutputType == 2):
         clustercommand = ["binned-inter","-b","%s" %(bookDir),"-v","%d" %(verbose)]
@@ -129,22 +127,19 @@ def main(sysargv):
         print "[Info]: genBook command: %s" %(book2pages)
         print "[Info]: cluster command: %s" %(clustercommand)
         print "[Info]: pdf     command: %s" %(pdfgencommand)
-	print "[Info]: pages2lines     command: %s" %(pages2lines)
-	print "[Info]: lines2fsts     command: %s" %(lines2fsts)
-	print "[Info]: fsts2text     command: %s" %(fsts2text)
 
     if pdfOutputType == 1:
         print infoToken+"['pdfgen']"
     if pdfOutputType == 2:
-        print infoToken+"['book2pages','pages2lines','lines2fsts','fsts2text','clustering','pdfgen']"
+        print infoToken+"['book2pages','pseg','linerec','clustering','pdfgen']"
     if pdfOutputType == 3:
-        print infoToken+"['book2pages','pages2lines','lines2fsts','fsts2text','clustering','pdfgen']"
+        print infoToken+"['book2pages','pseg','linerec','clustering','pdfgen']"
     if pdfOutputType == 4:
-        print infoToken+"['book2pages','pages2lines','lines2fsts','fsts2text','clustering','pdfgen']"      
-   
+        print infoToken+"['book2pages','pseg','linerec','clustering','pdfgen']"       
+    
     start = time.time()
 
-    if (len(book2pages)<2 or pdfFileName=="" or bookDir==""):
+    if (len(book2pages)<3 or pdfFileName=="" or bookDir==""):
         print("[Error]: bookFilename, pdfFileName or bookDir not defined! (\"%s\", \"%s\", \"%s\")" %(bookFileName, pdfFileName,bookDir))
         sys.exit(2)
 
@@ -152,42 +147,42 @@ def main(sysargv):
     #run ocropus pipeline
     if verbose>1:
         print "[Info]: running ocropus pipeline"
-        print book2pages
-   
+    
     # run ocropus binarization to generate the book Dir
     retCode = subprocess.call(book2pages)
     if (retCode != 0):
         print "[Error] generating book structure did not work as expected! (%s)" %(book2pages)
         sys.exit(2) #unknown error
-   
+    
     endBin = time.time()
     print infoToken+"processComplete:book2pages"
     if verbose>1:
         print "[Info]: time used by binarization: %d sec" %(endBin - start)
 
-    retCode = subprocess.call(pages2lines)
-    if (retCode != 0):
-        print "[Error] page2lines did not work!(%s)" %(cmd)
-        sys.exit(2) #unknown error
-    endPSeg = time.time()
-    print infoToken+"processComplete:pages2lines"
-    if verbose>1:
-        print "[Info]: time used by pages2lines %d sec" %(endPSeg - endBin)
-
     if(pdfOutputType > 1):
-	#
-        retCode = subprocess.call(lines2fsts)
+        fileList = glob.glob("%s/????.png" %(bookDir))
+        cmd = fileList
+        cmd.insert(0,"ocropus-pseg")
+        retCode = subprocess.call(cmd)
         if (retCode != 0):
-            print "[Error] lines2fsts did not work as expected! (%s)" %(cmd)
+            print "[Error] page segmentation did not work as expected! (%s)" %(cmd)
             sys.exit(2) #unknown error
-        print infoToken+"processComplete:lines2fsts"
-	#
-        retCode = subprocess.call(fsts2text)
+
+        endPSeg = time.time()
+        print infoToken+"processComplete:pseg"
+        if verbose>1:
+            print "[Info]: time used by page segmentation: %d sec" %(endPSeg - endBin)
+
+        fileList = glob.glob("%s/????/??????.png" %(bookDir))
+        cmd = fileList
+        cmd.insert(0,"ocropus-linerec")
+        retCode = subprocess.call(cmd)
         if (retCode != 0):
-            print "[Error] lfsts2text did not work as expected! (%s)" %(cmd)
+            print "[Error] line recognition did not work as expected! (%s)" %(cmd)
             sys.exit(2) #unknown error
+        
         endRecog = time.time()
-	print infoToken+"processComplete:fsts2text"
+        print infoToken+"processComplete:linerec"        
         if verbose>1:
             print "[Info]: time used by text recognizer: %d sec" %(endRecog-endPSeg)
 
@@ -213,12 +208,12 @@ def main(sysargv):
     #run pdf gen
     if verbose>1:
         print "[Info]: generating pdf"
-   
+    
     retCode = subprocess.call(pdfgencommand)
     if (retCode != 0):
         print "[Error] PDF generation did not work as expected! (%s)" %(pdfgencommand)
         sys.exit(2)
-   
+    
     endGenPDF = time.time()
     print infoToken+"processComplete:genpdf"
     if verbose>1:
@@ -227,7 +222,7 @@ def main(sysargv):
 
 def usage(progName):
     print "\n%s [OPTIONS]\n\n"\
-              "   -b  --book         name of multipage tiff file\n"\
+	      "   -b  --book         name of multipage tiff file\n"\
           "   -d, --dir          Ocropus Directory to be converted\n"\
           "   -p, --pdf          PDF File that will be generated\n"\
           " Options:\n"\
@@ -253,5 +248,4 @@ if __name__ == "__main__":
 
 
  
-
 

@@ -49,7 +49,6 @@ def readFile(fn):
 def readBoxFile(fn):
     if os.path.exists(fn)== False:
 	print "[warn] file could not be opened: ",fn
-	return []
     f    = file(fn, "r")
     data = [line.split() for line in f]
     f.close()
@@ -61,10 +60,28 @@ def readBoxFile(fn):
         coords[i,3] = int(data[i][3]) # y1
     return coords
 
+#reads locations of where each image belongs on page (bounding box)
+def readBoxIDFile(fn):
+    print fn
+    if os.path.exists(fn)== False:
+        print "[warn] file could not be opened: ",fn
+    f    = file(fn, "r")
+    data = [line.split() for line in f]
+    f.close()
+    coords = zeros([len(data),4],int)
+    ids    = []
+    for i in range(len(data)):
+        coords[i,0] = int(data[i][0]) # x0
+        coords[i,1] = int(data[i][1]) # y0
+        coords[i,2] = int(data[i][2]) # x1
+        coords[i,3] = int(data[i][3]) # y1
+        ids.append(data[i][4]) # y1
+    return coords,ids
+
 #reads the output from binned clustering
 def readTokenIDFile(fn):
     if os.path.exists(fn) == False:
-	print "[warn] file could not be opened: ",fn
+        print "[warn] file could not be opened: ",fn
 	return []
     f    = file(fn, "r")
     data = [line.split() for line in f]
@@ -101,9 +118,11 @@ class Book:
         # filelist is unsorted, that's why pages need to be sorted afterwards
         for f in fileList:
             if(len(f)==8 and f[len(f)-4:len(f)] == ".png"): # FIXME joost,
-		if(os.path.exists(self.bookDir+"/"+f.split(".")[0])): #whitespace page check
-                	p = Page(self.bookDir+"/"+f)
-                	self.pages.append(p)
+                # check at this stage if the image eists
+                # subDir does not exist if ocropus isn't run but we still want to generate image only PDF
+                if(os.path.exists(self.bookDir+"/"+f.split(".")[0]+".png")): #whitespace page check
+                    p = Page(self.bookDir+"/"+f)
+                    self.pages.append(p)
         self.sortPages()
         self.readTokens()
     
@@ -168,6 +187,7 @@ class Page:
         self.lineBoxs = "" # file containing the page to line segm. information
         self.linesPos = [] # position of lines
         self.lines    = [] # list of lines
+        self.IDs      = [] # ID numbers of the lines
      #   self.tseg    = [] # list of tokID
     # constructor with file name, e.g. bookDIR/0001.png
     def __init__(self, imgFN):
@@ -178,6 +198,9 @@ class Page:
             self.binImage = imgFN[0:len(imgFN)-4]+".bin.png" # FIXME joost,
             self.lineBoxs = imgFN[0:len(imgFN)-4]+".pseg.txt" # FIXME joost,
             self.pageDir  = imgFN[0:len(imgFN)-4]+"/" # FIXME joost,
+            self.linesPos = [] # position of lines
+            self.lines    = [] # list of lines
+            self.IDs      = [] # ID numbers of the lines
           #  self.tseg    = [] # list of tokID
             self.update()
         # output error message
@@ -201,15 +224,23 @@ class Page:
     # read the page information from the directory structure
     def update(self):
         # get line image list
-	if(not os.path.exists(self.pageDir)): return #ocropus does not genereate dir for whitespace page
+        if(not os.path.exists(self.pageDir)): return #ocropus does not genereate dir for whitespace page
         self.lines = []
-        self.linesPos = readBoxFile(self.lineBoxs)
+        self.IDs   = [] # ID numbers of the lines
+        tmpLinesPos,self.IDs = readBoxIDFile(self.lineBoxs)
         fileList = os.listdir(self.pageDir)
-        for f in fileList:
-            if(len(f) == 10 and f[len(f)-4:len(f)] == ".png"): # FIXME joost,
-                l = Line(self.pageDir + f)
+        for i in range(len(self.IDs)):
+            fn = self.pageDir + self.IDs[i] + ".png"
+            #print fn, os.path.exists(fn)
+            if os.path.exists(fn):
+                l = Line(fn)
+                self.linesPos.append(tmpLinesPos[i])
                 self.lines.append(l)
-        self.sortLines()
+        #for f in fileList:
+            #if(len(f) == 10 and f[len(f)-4:len(f)] == ".png"): # FIXME joost,
+                #l = Line(self.pageDir + f)
+                #self.lines.append(l)
+        #self.sortLines()
 
 #        for f in fileList:
 #            if(f.find("patID")!=-1):
@@ -252,7 +283,7 @@ class Line:
         self.bboxFile = "" # list of connected component files
         self.textFile = "" # list containing the line text
         self.csegFile = "" # list containing the line text
-    
+   
     # constructor with file name, e.g. bookDIR/0001/0001.png
     def __init__(self, imgFN):
         # filename given
@@ -305,5 +336,4 @@ class Line:
                 os.path.exists(self.bboxFile) and
                 os.path.exists(self.csegFile))
 		
-
 
