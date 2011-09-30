@@ -21,7 +21,7 @@
 # Responsible: Joost van Beusekom (joost@iupr.org)
 # Reviewer: 
 # Primary Repository: 
-# Web Sites: www.iupr.org, www.dfki.de
+# Web Sites: www.iupr.com, www.dfki.de
 
 import os, glob, string, sys, time, getopt, commands, math, numpy, datetime, platform, tempfile
 from ocrodir import *
@@ -71,7 +71,7 @@ def convert2ImagePDF(bookDir,pdfFileName,b,pdf):
             pdf.drawInlineImage(img, 0,0,width*cm,height*cm) # use inline as each page is used only once
         
         pdf.showPage() # finish PDF page
-    pdf.save() # save PDF to sile
+    pdf.save() # save PDF to file
 
 
 # ========= Image with underlaid Text PDF =========
@@ -245,7 +245,75 @@ def convert2TokenPDF(bookDir,pdfFileName,b,pdf):
 
 # ========= Generate PDF with integrated font =========
 def convert2FontPDF(bookDir,pdfFileName,b,pdf):
-    print("[error]: Method not yet implemented. Please choose another PDF output type!")
+    # this code is copied from /decapod.genpdf/src
+    global dpi
+    
+    # ignore warning of missing glyphs
+    reportlab.rl_config.warnOnMissingFontGlyphs = 1
+    # register all fonts
+    for i in range(len(b.fonts)):
+        print b.fonts[i]
+        pdfmetrics.registerFont(TTFont("%d" %(i),b.fonts[i]));
+
+    
+    # aspect/ratio of the pdf page to be generated
+    ar = float(b.pageSize[0])/float(b.pageSize[1])
+    for i in range(len(b.pages)):
+        if(verbose > 1):
+            print("Processing page %d" %(b.pages[i].number))
+        # put image
+        img = Image.open(b.pages[i].image)
+        
+        # width and height of the document image in pixel
+        W = float(img.size[0])
+        H = float(img.size[1])
+        # fit document image to PDF page maximizing the displayed area
+        factor = 0.0
+        # the next few lines check if the height or the width of the page
+        # is the boundary for the size of the rescaled image
+        if(W/H > ar):
+            width = float(b.pageSize[0]) # width of the PDF page in cms
+            height= width/(W/H)
+            factor = b.pageSize[0]/W
+        if(W/H <= ar):
+            height= float(b.pageSize[1])
+            width = height/(H/W)
+            factor = b.pageSize[1]/H
+        resizeW = (1.0/2.54)*width*dpi # width of the image after resizing
+        resizeH = (1.0/2.54)*height*dpi # height of the image after resizing
+        
+        factorScalePx = W/(width*dpi/2.54) # this factor is needed to set the
+            # resulting PDF size into relation with the original image size
+            # this is needed to estimate the correct font size
+        
+        # for each page, for each line, put text
+        for j in range(len(b.pages[i].lines)): # iterate through all pages
+            # check if text-line is fontable and if not ignore it
+            if(b.pages[i].lines[j].checkTokenable() == False or
+               b.pages[i].lines[j].checkTextable() == False or
+               b.pages[i].lines[j].checkFontable() == False): continue
+
+            # compute the position of the baseline
+            baseLine = b.pages[i].linesPos[j][1]+b.pages[i].lines[j].baseLineY
+            
+            # for each word in text-line
+            for k in range(len(b.pages[i].lines[j].words)): 
+                # compute position of character
+                ccPos = b.pages[i].linesPos[j] + b.pages[i].lines[j].wordPos[k]
+                # set font according to information in fontID file
+                pdf.setFont("%d" %(b.pages[i].lines[j].wordFont[k]), b.pages[i].lines[j].fontHeight/dpi*72/factorScalePx)
+                #print "[info] ocro2pdf::convert2FontPDF: computed font size = %d %f" %(b.pages[i].lines[j].fontHeight/dpi*72*factor,factor)
+                pdf.setFont("Helvetica", b.pages[i].lines[j].fontHeight/dpi*72/factorScalePx)#Hasan: uncommented this line
+                
+                # draw character in correct position
+                pdf.drawString(ccPos[0]*factor*cm, baseLine*factor*cm, b.pages[i].lines[j].words[k])        
+        pdf.showPage() # finish PDF page
+    pdf.save() # save PDF to file
+   
+   
+   
+    
+'''    print("[error]: Method not yet implemented. Please choose another PDF output type!")
     return
     
     global dpi
@@ -255,7 +323,7 @@ def convert2FontPDF(bookDir,pdfFileName,b,pdf):
     pdf.setFont("TEST")
     pdf.drawString(10,150,"Testfonttext")
     pdf.showPage() # finish PDF page
-    pdf.save() # save PDF to file
+    pdf.save() # save PDF to file'''
 
     
     
@@ -412,11 +480,21 @@ def main(sysargv):
         if(b.checkTokenPresence() == 1):
             convert2TokenPDF(bookDir,pdfFileName,b,pdf)
         else:
-            print("[warn] No tokens found! Book structure is not tokenable. Switching to type 2 mode!")
+            print("[Warn] No tokens found! Book structure is not tokenable. Switching to type 2 mode!")
             convert2ImageTextPDF(bookDir,pdfFileName,b,pdf)
     
     if(pdfOutputType == 4):
-        print("[error]: PDF Type 4 is not yet implemented. Please choose another type!")
+        if(b.checkFontPresence() == 1):
+            convert2FontPDF(bookDir,pdfFileName,b,pdf)
+    elif(b.checkTokenPresence() == 1):
+            print("[Warn] No fonts found! Book structure is not fontable. Switching to type 3 mode!")
+            convert2TokenPDF(bookDir,pdfFileName,b,pdf)
+    else:
+        print("[Warn] No fonts found! Book structure is not fontable. Switching to type 2 mode!")
+        convert2ImageTextPDF(bookDir,pdfFileName,b,pdf) #Hasan: Added this line
+
+#        print("[error]: PDF Type 4 is not yet implemented. Please choose another type!")
+        
         
         # example code for generating a PDF with a Font
         #reportlab.rl_config.warnOnMissingFontGlyphs = 0
@@ -439,6 +517,7 @@ def usage(progName):
           "                          1: image only [default]\n"\
           "                          2: recognized text overlaid with image\n"\
           "                          3: tokenized\n"\
+          "                          4: fonted PDF"\
           "   -W, --width:       width of the PDF page [in cm] [default = 21.0]:\n"\
           "   -H, --height:      height of the PDF page [in cm] [default = 29.7]:\n"\
           "   -r, --resolution:  resolution of the images in the PDF [default = 200dpi]\n"\
