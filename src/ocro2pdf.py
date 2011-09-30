@@ -230,7 +230,7 @@ def convert2TokenPDF(bookDir,pdfFileName,b,pdf):
                 ccW = (1.0/2.54)*ccWidth*dpi*0.5
                 ccH = (1.0/2.54)*ccHeight*dpi*0.5
                 #pdf.drawString(ccPos[0]*factor*cm, 
-                               #ccPos[1]*factor*cm, b.pages[i].lines[j].txt[k])
+                #ccPos[1]*factor*cm, b.pages[i].lines[j].txt[k])
                 if(ccW >= 1 and ccH >= 1):
                     f = b.tokens[tokenIndex]
                     img = Image.open(f)
@@ -303,7 +303,7 @@ def convert2FontPDF(bookDir,pdfFileName,b,pdf):
                 # set font according to information in fontID file
                 pdf.setFont("%d" %(b.pages[i].lines[j].wordFont[k]), b.pages[i].lines[j].fontHeight/dpi*72/factorScalePx)
                 #print "[info] ocro2pdf::convert2FontPDF: computed font size = %d %f" %(b.pages[i].lines[j].fontHeight/dpi*72*factor,factor)
-                pdf.setFont("Helvetica", b.pages[i].lines[j].fontHeight/dpi*72/factorScalePx)#Hasan: uncommented this line
+                pdf.setFont("Helvetica", b.pages[i].lines[j].fontHeight/dpi*72/factorScalePx) #Hasan: uncommented this line
                 
                 # draw character in correct position
                 pdf.drawString(ccPos[0]*factor*cm, baseLine*factor*cm, b.pages[i].lines[j].words[k])        
@@ -493,9 +493,7 @@ def main(sysargv):
         print("[Warn] No fonts found! Book structure is not fontable. Switching to type 2 mode!")
         convert2ImageTextPDF(bookDir,pdfFileName,b,pdf) #Hasan: Added this line
 
-#        print("[error]: PDF Type 4 is not yet implemented. Please choose another type!")
-        
-        
+      
         # example code for generating a PDF with a Font
         #reportlab.rl_config.warnOnMissingFontGlyphs = 0
         #pdfmetrics.registerFont(TTFont("TEST","TEST.ttf"));
