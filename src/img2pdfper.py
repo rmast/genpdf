@@ -87,9 +87,9 @@ def calculateImg2PDFPerformance():
 def main(sysargv):
     parser = OptionParser()
     parser.add_option("-d", "--directory", default="", dest="srcDirectory", 
-        type="string", help="Directory name (without the last '/') for the source images")
-    parser.add_option("-t", "--type", default=1, dest="pdfType(s)", type="int", 
-        help="type of the output PDF file [1..4]")
+        type="string", help="Directory name for the source images. The '/' will be added (if not there)")
+    parser.add_option("-t", "--type", default=1, dest="pdfType", type="int", 
+        help="type of the output PDF file [1..4]. Can use more than one type simultaneously")
     parser.add_option("-v", "--verbose", default=0, dest="verbose", type="int", 
         help="verbose type: 0 (silent) or 1 (detailed)")
     (opt, args) = parser.parse_args()
@@ -97,9 +97,9 @@ def main(sysargv):
     if opt.srcDirectory == '':
         print("Error: directory name for the source images is missing.\nPlease supply the directory name using the '-d' option")
         exit(1)
-    else:
-        opt.srcDirectory = opt.srcDirectory + '/'
-        
+    if opt.srcDirectory[len(opt.srcDirectory)-1] != '/':
+	opt.srcDirectory = opt.srcDirectory + '/'
+   
     fileList = createImageList(opt)
     genPDF4ImageList(fileList, opt)
     calculateImg2PDFPerformance()
