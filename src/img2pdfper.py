@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # (C) 2011 University of Kaiserslautern 
 # 
 # You may not use this file except under the terms of the accompanying license.
