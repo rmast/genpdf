@@ -103,7 +103,7 @@ def convert2ImageTextPDF(bookDir,pdfFileName,b,pdf):
         resizeH = (1.0/2.54)*height*dpi # height of the image after resizing 
         if(verbose > 1):
             print("Size before %d x %d and after %d x %d" %(W,H,resizeW,resizeH))
-            
+
         # put text
         # change text color to white
         pdf.setFillColorRGB(1.0,1.0,1.0)
@@ -114,16 +114,16 @@ def convert2ImageTextPDF(bookDir,pdfFileName,b,pdf):
             
             
             startIndex = 0
-            endIndex   = len(b.pages[i].lines[j].txt)
+            endIndex   = len(b.pages[i].lines[j].txtAll) #Hasan: Changed '.txt' to '.txtAll'
             nextSepIndex = startIndex+1;
             while(startIndex<endIndex):
                 while (nextSepIndex < endIndex and
-                      b.pages[i].lines[j].txt[nextSepIndex] != ' ' and
-                      b.pages[i].lines[j].txt[nextSepIndex] != '\n'):
-                      nextSepIndex = nextSepIndex+1
+                      b.pages[i].lines[j].txtAll[nextSepIndex] != ' ' and #Hasan: Changed '.txt' to '.txtAll'
+                      b.pages[i].lines[j].txtAll[nextSepIndex] != '\n'):  #Hasan: Changed '.txt' to '.txtAll'
+                    nextSepIndex = nextSepIndex+1 #Hasan: Changed indent. of this line
                 word = ""
                 for k in range(startIndex,nextSepIndex):
-                    word = word + b.pages[i].lines[j].txt[k]
+                    word = word + b.pages[i].lines[j].txtAll[k] #Hasan: Changed '.txt' to '.txtAll'
                 wordPos = b.pages[i].linesPos[j] + b.pages[i].lines[j].ccs[startIndex-numSpaces]
                 if(verbose > 3):
                     print ccPos
@@ -194,16 +194,16 @@ def convert2TokenPDF(bookDir,pdfFileName,b,pdf):
             numSpaces = 0;
             # first: put text
             startIndex = 0
-            endIndex   = len(b.pages[i].lines[j].txt)
+            endIndex   = len(b.pages[i].lines[j].txtAll) #Hasan: Changed '.txt' to '.txtAll'
             nextSepIndex = startIndex+1;
             while(startIndex<endIndex):
                 while (nextSepIndex < endIndex and
-                      b.pages[i].lines[j].txt[nextSepIndex] != ' ' and
-                      b.pages[i].lines[j].txt[nextSepIndex] != '\n'):
-                      nextSepIndex = nextSepIndex+1
+                      b.pages[i].lines[j].txtAll[nextSepIndex] != ' ' and #Hasan: Changed '.txt' to '.txtAll'
+                      b.pages[i].lines[j].txtAll[nextSepIndex] != '\n'): #Hasan: Changed '.txt' to '.txtAll'
+                    nextSepIndex = nextSepIndex+1 #Hasan: changed the indent. of this line
                 word = ""
                 for k in range(startIndex,nextSepIndex):
-                    word = word + b.pages[i].lines[j].txt[k]
+                    word = word + b.pages[i].lines[j].txtAll[k] #Hasan: Changed '.txt' to '.txtAll'
                 wordPos = b.pages[i].linesPos[j] + b.pages[i].lines[j].ccs[startIndex-numSpaces]
                 if(verbose > 3):
                     print ccPos
@@ -486,12 +486,12 @@ def main(sysargv):
     if(pdfOutputType == 4):
         if(b.checkFontPresence() == 1):
             convert2FontPDF(bookDir,pdfFileName,b,pdf)
-    elif(b.checkTokenPresence() == 1):
+        elif(b.checkTokenPresence() == 1):
             print("[Warn] No fonts found! Book structure is not fontable. Switching to type 3 mode!")
             convert2TokenPDF(bookDir,pdfFileName,b,pdf)
-    else:
-        print("[Warn] No fonts found! Book structure is not fontable. Switching to type 2 mode!")
-        convert2ImageTextPDF(bookDir,pdfFileName,b,pdf) #Hasan: Added this line
+        else:
+            print("[Warn] No fonts found! Book structure is not fontable. Switching to type 2 mode!")
+            convert2ImageTextPDF(bookDir,pdfFileName,b,pdf) #Hasan: Added this line
 
       
         # example code for generating a PDF with a Font

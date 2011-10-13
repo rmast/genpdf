@@ -305,7 +305,7 @@ class Line:
         self.textFile = "" # list containing the line text
         self.csegFile = "" # list containing the line text
         self.fontIDs  = [] # font IDs for single characters
-        self.fontFile = "" # font File contsaining information for each chasracter in line what font to use
+        self.fontFile = "" # font File containing information for each character in line what font to use
         self.shiftFile= "" # file containing the shift information for each text-line
         self.baseLineY= 0  # relative height of the baseline
         self.fontHeight= 50 # default font height for 12 pts in 300dpi = 50 px
