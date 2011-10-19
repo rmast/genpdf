@@ -875,6 +875,9 @@ def makeLessSupervisedFont(fontList,i):
     #make a font from list
 #    fontforge.setPrefs("AutotraceArgs","-u 20")#Hasan: Added this line
     FONT=fontforge.font()
+    fontforge.setPrefs("PreferPotrace", 1) # Hasan: added this line: Setting Potrace as the prefered boundray tracer
+    fontforge.setPrefs("AutotraceAsk", "-O 0.5 -u 1 -t 1") # Hasan: added this line: Setting the parameters of the tracing library
+
     #open known font
     font = fontforge.open("DejaVuSans.sfd") 
     #the information from the module font is used in the following way:
@@ -899,7 +902,7 @@ def makeLessSupervisedFont(fontList,i):
             cW = allTokens[Tid].averageW
             if options.verbose >= 2: print "font",fH,fW,"char",cH,cW
             if (fW == 0 or fH == 0): # Hasan: added this 'if' statement
-                print "Error: division by zero in makeLessSupervisedFont(), function call at line %i\n Possibly invalid bounding box info\n Pleae make sure autotrace library is installed"% currentframe().f_back.f_lineno
+                print "Error: division by zero in makeLessSupervisedFont(), function call at line %i\n Possibly invalid bounding box info\n Pleae make sure autotrace and potrace libraries are installed"% currentframe().f_back.f_lineno
                 raise(-1)
             avgXscaleList.append(cW/float(fW))
             avgYscaleList.append(fH/float(fH))
