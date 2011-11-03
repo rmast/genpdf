@@ -99,7 +99,7 @@ def main(sysargv):
         print("Error: directory name for the source images is missing.\nPlease supply the directory name using the '-d' option")
         exit(1)
     if opt.srcDirectory[len(opt.srcDirectory)-1] != '/':
-	opt.srcDirectory = opt.srcDirectory + '/'
+        opt.srcDirectory = opt.srcDirectory + '/'
    
     fileList = createImageList(opt)
     genPDF4ImageList(fileList, opt)

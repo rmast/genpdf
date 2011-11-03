@@ -893,7 +893,7 @@ def makeLessSupervisedFont(fontList,i):
             tempImageFileName = padWithPil(b.tokens[Tid])       
             c.importOutlines(tempImageFileName)         #load outline
             os.remove(tempImageFileName)
-            #on 64bit ubuntu this does not work as expected...
+            #on 64bit ubuntu 'c.autotrace()' does not work as expected...
             c.autoTrace()   #trace  
             xminR,yminR, xmaxR,ymaxR = c.boundingBox()
             fH = ymaxR - yminR

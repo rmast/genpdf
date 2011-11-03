@@ -31,6 +31,7 @@ import getopt
 import shlex, subprocess
 import glob
 from optparse import OptionParser # easier parsing of the cmd line parameters
+from img2pdfper import createImageList
 
 
 class Options:
@@ -54,21 +55,51 @@ class Options:
         self.fontCMD       = "./fontGrouper.py" # cmd line tool for font generation
         self.pdfGenCMD     = "./ocro2pdf.py"  # cmd line tool for PDF generation
         
-        
-    def generateBook2PagesCMD(self):
+    def createImageList(self, dir):
+        imageFormats = [".jpg", ".tif", ".tiff", ".png", ".bmp"] #FIXME: add more image file types supported by Ocropus
+    #    __imageFormatLine__ = currentframe().f_back.f_lineno
+        listFiltered = []
+        list = glob.glob(dir + "*.*") 
+        list.sort(cmp=None, key=None, reverse=False)
+            
+        #filter the list by removing non-images
+        for i in list:
+            foundFlag = 0
+            # filter out non images
+            for j in imageFormats:
+                str = i[len(i)-len(j):]
+                if j == (i[len(i)-len(j):]).lower():
+                    foundFlag = 1;
+            if foundFlag == 1:
+                listFiltered.append(i) 
+        return listFiltered
+            
+    def generateBook2PagesCMD(self, inFile):
         cmd = []
-        if(self.bookFileName!="" and len(self.inFileList)==0): # multipage tiff given
+        fileList = []
+        if (self.bookFileName != "" and self.bookFileName[len(self.bookFileName)-1] == '/'): # Input is a folder (with '/' at the end)
+            fileList = self.createImageList(self.bookFileName)
+            cmd = self.book2PagesCMD
+            cmd.append(self.bookDir)
+            for i in fileList:
+                cmd.append(i)
+        elif(self.bookFileName!="" and len(inFile)==0): # Input is a multipage tiff 
             cmd = self.book2PagesCMD
             cmd.append(self.bookDir)
             cmd.append(self.bookFileName)
-        elif(self.bookFileName=="" and len(self.inFileList)>0): # Hasan: FIXME: wrong code in elif
-            cmd = [self.book2PagesCMD]
-            for i in len(self.inFileList):
-                cmd.append(self.inFileList[i])
-            cmd.append("-o")
+        elif(self.bookFileName=="" and len(inFile)>0): # Many image files are given, but without '-b' option
+            cmd = self.book2PagesCMD
             cmd.append(self.bookDir)
+            for i in inFile:
+                cmd.append(i)
+        elif(self.bookFileName!="" and len(inFile)>0):  # Many image files are given with '-b' option (-b file1 file2 ... fileN)
+            cmd = self.book2PagesCMD
+            cmd.append(self.bookDir)
+            cmd.append(self.bookFileName)
+            for i in inFile:
+                cmd.append(i)
         else:
-            print("[warn] Expecting either -b FILE or FILE1...N as arguments")
+            print("[warn] An unexpected 'book' parameter combination\nExpecting either (1) -b file  (2) -b folder/  (3) -b file1 file2...fileN (4) file1 file2...fileN")
         return cmd;
         
     def generateClusterCMD(self):
@@ -123,7 +154,7 @@ def main(sysargv):
 #    book2pages = ["ocropus-binarize"] # command called for generating the book Dir and binarization
 #    bookFileName = ""   # multipage TIFF file for which the PDF is generated
 #    pdfOutputType = 1   # default PDF type: image only
-#    pdfFileName = ""    # filename of the resultine PDF
+#    pdfFileName = ""    # filename of the resulting PDF
 #    dpi=300             # default resolution
 #    verbose=0           # default: be not verbose at all
     infoToken = "$@$ExportStatus$@$"
@@ -141,7 +172,7 @@ def main(sysargv):
         type="float", help="page width of the generated PDF file (in [cm])")
     parser.add_option("-H", "--height", default=29.7, dest="pageHeight",
         type="float", help="page height of the generated PDF file (in [cm])")
-    parser.add_option("-d", "--dir",  dest="bookDir",  
+    parser.add_option("-d", "--dir",  default="NewBook", dest="bookDir",  #Hasan added 'default="NewBook"'
         help="OCRopus Book directory structure that will be generated")
     parser.add_option("-p", "--pdf",  dest="pdfFileName",  
         help="name of the resulting PDF file")
@@ -149,8 +180,8 @@ def main(sysargv):
         type="int", help="verbosity")
     parser.add_option("-r", "--resolution", default=300, dest="dpi", 
         type="int", help="Resolution of the input images (in [dpi])")
-    parser.add_option("-b", "--book",  dest="bookFileName",  
-        help="name of the multipage tiff input file")
+    parser.add_option("-b", "--book", default="", dest="bookFileName",  #Hasan
+        help="name of the multipage tiff input file OR folder with images inside. Folder name should have '/' as the last character.")
     parser.add_option("-f", "--font",  dest="fontFileName",  
         help="name of the TTF font to be used to create the PDF file")
     # parse params and options
@@ -160,7 +191,8 @@ def main(sysargv):
     opt.width   = options.pageWidth
     opt.height  = options.pageHeight
     opt.bookFileName = options.bookFileName
-    opt.bookDir = options.bookDir +'/'
+    if (opt.bookDir != ""):
+        opt.bookDir = options.bookDir +'/' # Hasan: FIXME: Convert this code to check whether bookDir is a directory
     opt.pdfOutputType = int(options.pdfOutputType)
     opt.verbose = options.verbose
     opt.pdfFileName = options.pdfFileName
@@ -169,7 +201,9 @@ def main(sysargv):
     
     start = time.time()
 
-    opt.book2PagesCMD = opt.generateBook2PagesCMD()
+    opt.book2PagesCMD = opt.generateBook2PagesCMD(args)
+    if (len(opt.book2PagesCMD) == 0):
+        sys.exit(2)
     retCode = subprocess.call(opt.book2PagesCMD)
     if (retCode != 0):
         print "[Error] generating book structure did not work as expected! (%s)" %(opt.book2PagesCMD)
