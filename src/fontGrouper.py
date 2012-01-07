@@ -890,6 +890,8 @@ def makeLessSupervisedFont(fontList,i):
         if options.verbose >=2: print "making a font for character class",labels[Tid]
         try:
             c = FONT.createChar(ord(labels[Tid]))      #generate a new char #int represents unicode position
+#            if (labels[Tid] == 'A' or labels[Tid] == 'a'): #Hasan: 'if' Added for debug purpose
+#                print("<<<",labels[Tid],">>>")
             tempImageFileName = padWithPil(b.tokens[Tid])       
             c.importOutlines(tempImageFileName)         #load outline
             os.remove(tempImageFileName)
@@ -926,7 +928,7 @@ def makeLessSupervisedFont(fontList,i):
             translatemax = psMat.translate(0,yscaleAmount)
             c.transform(translatemax) #makes the size relative to cseg bbox
             #next xscale translate to pad the image
-            xminR,yminR,xmaxR,ymaxR = c.boundingBox()
+            xminR,yminR,xmaxR,ymaxR = c.boundingBox() #Hasan: BB in em units ?!?!
             xlength = xmaxR - xminR
             guessXpad = xlength/7
             translatemax = psMat.translate(guessXpad,0)
@@ -1275,7 +1277,7 @@ def main():
                   help="bookname of OCR bookstructure [EXTENDED]")
     parser.add_option("-n", "--numFontClasses",default=1,
                   dest="numFontClasses", type="int", help="the number of fontClasses")
-    parser.add_option("-k", "--numNearestNeighbors", default=4,type="int",
+    parser.add_option("-k", "--numNearestNeighbors", default=1,type="int",
                   dest="k",help="the number of neighbors to shatter")
     parser.add_option("-s", "--numSwaps", default=3,
                   dest="numSwaps",type="int",help="the number of time to try swapping for stronger connected tokens")

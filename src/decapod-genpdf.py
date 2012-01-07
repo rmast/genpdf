@@ -31,7 +31,6 @@ import getopt
 import shlex, subprocess
 import glob
 from optparse import OptionParser # easier parsing of the cmd line parameters
-from img2pdfper import createImageList
 
 
 class Options:
@@ -137,7 +136,7 @@ class Options:
     def generateFontCMD(self):
         cmd=[]
         if(self.pdfOutputType==4):
-            cmd=[self.fontCMD,"-d","%s" %(self.bookDir)]
+            cmd=[self.fontCMD,"-d","%s" %(self.bookDir)]#, "-n", "3"] # Hasan: 2011-11-29
         return cmd
 
     def generatePDFCMD(self):
@@ -266,7 +265,7 @@ def main(sysargv):
         print "[Info]: time used by clustering: %d sec" %(endClustering - endOCROPUS)
 
 
-    #run clustering
+    #run font generation
     if(opt.pdfOutputType==4):
         if opt.verbose>1:
             print "[Info]: running font generation"
