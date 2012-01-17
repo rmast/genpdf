@@ -104,19 +104,47 @@ def loadLineBB(ccs):
 def loadTokenID(tokenIDs):
     return
 
-def loadTokenImage(tokFileName, bookDir):
+def loadTokenImage(tokFileName, bookDir, opt):
 #    tokenFileName = bookDir + "/tokens/" + "%08i.png"%int(tokNum)
     im = Image.open(tokFileName)
-##    print(tokFileName,"\n")
+    if opt.verbose == 1:
+        print(tokFileName,"\n")
     return im
                    
-def loadLineImage(line):
+def loadLineImage(line, opt):
 #    lineFileName = pageDir + "%02i"%int(page.number) + "%04h"%int(line.) + "%08i.png"%int(num)
     im = Image.open(line.image)
-##    print(line.image,"\n")
+    if opt.verbose==1:
+        print(line.image,"\n")
     return im
-                   
-def MSE(tokImage, charImage, bbx):
+
+def findBBox(image):
+    xsize, ysize = image.size
+    i=0
+    j=0
+    x1= xsize
+    y1= ysize
+    x2=-1
+    y2=-1
+    while j<ysize:
+        i=0
+        while i<xsize:
+            r,g,b = image.getpixel((i,j))
+            if r == 0:
+#                print "x=%i, y=%i, r = %s"% (i, j, image.getpixel((i,j))) 
+                if i < x1:
+                    x1 = i
+                if j < y1:
+                    y1 = j
+                if i > x2:
+                    x2 = i
+                if j > y2:
+                    y2 = j
+            i += 1
+        j += 1
+    return (x1, y1, x2, y2)
+    
+def MSE(tokImage, charImage, bbx, opt):
     xx1, yy1, xx2, yy2 = bbx
     x1 = int(xx1)
     y1 = int(yy1)
@@ -125,13 +153,19 @@ def MSE(tokImage, charImage, bbx):
     width, height = tokImage.size
     xsize = x2 - x1 + 1
     ysize = y2 - y1 + 1
-    tokImageScaled = tokImage.resize((xsize, ysize))# FIXME: Resize the CC rather than the whole image
-    tokImageScaledPix = tokImageScaled.load() 
+    bb = findBBox(tokImage)
+    if opt.verbose == 1:
+        print "bb = %s"%(bb,)
+    tokImageCrop = tokImage.crop(bb)
+    tokImageCropScaled = tokImageCrop.resize((xsize, ysize), Image.ANTIALIAS)# Resizing the CC rather than the whole image
+    tokImageCropScaledPix = tokImageCropScaled.load() 
     charImagePix = charImage.load()
 
-#    print "tokImage.size=%s"%((tokImage.size),)
-#    print "tokImageScaled.size=%s"%((tokImageScaled.size),)
-#    print "charImage.size=%s"%((charImage.size),)
+    if opt.verbose == 1:
+        print "tokImage.size=%s"%((tokImage.size),)
+        print "tokImageCrop.size=%s"%((tokImageCrop.size),)
+        print "tokImageScaled.size=%s"%((tokImageCropScaled.size),)
+        print "charImage.size=%s\n"%((charImage.size),)
 #    print  "xsize=%i"%xsize
 #    print  "ysize=%i"%ysize
         
@@ -142,26 +176,25 @@ def MSE(tokImage, charImage, bbx):
         x1 = int(xx1)
         xt = 0
         while x1 <= x2:
-#            try:
-#                print (xt, " ", yt, "[", tokImageScaledPix[xt,yt], "]")
+            try:
+#                print (xt, " ", yt, "[", tokImageCropScaledPix[xt,yt], "]")
 #                print (x1, " ", y1, "[", charImagePix[x1,y1], "]")
-                r1, g1, b1 = tokImageScaledPix[xt,yt]
+                r1, g1, b1 = tokImageCropScaledPix[xt,yt]
                 r2, g2, b2 = charImagePix[x1,y1]
                 mse += (r1 - r2) * (r1 - r2)
 #                print "x=%i, y=%i, tokImage.getpixel((x,y)=%i, charImage.getpixel((x,y)=%i"%(x1, y1, r1, r2)
                 xt = xt + 1
                 x1 = x1 + 1
-#            except:
+            except: #FIXME: Correct by specify the cause of the exception
+                xt = xt + 1
+                x1 = x1 + 1
 #                print "exception\n"                
 #                pass
-                
-#                xt = xt + 1
-#                x1 = x1 + 1
         yt = yt + 1
         y1 = y1 + 1   
     return (mse/((1.0 * xsize)*ysize))
     
-def getPerformance(b):
+def getPerformance(b, opt):
     psnr = 0.0
     accMSE = 0.0
     mse = 0.0
@@ -169,21 +202,22 @@ def getPerformance(b):
     for i in range(len(b.pages)):
         for j in range(len(b.pages[i].lines)):
             k = b.pages[i].lines[j]
-            #bb = loadLineBB(k.ccs) # load BB for each char in the line into `bb` list
-##            print("k.ccs=%s\n"%k.ccs)
-            #tID = loadTokenID(k.tokenIDs) # load token ID into `tID` list
-##            print("k.tokenIDs=%s\n"%k.tokenIDs)
-            charImage = loadLineImage(k)
+                #bb = loadLineBB(k.ccs) # load BB for each char in the line into `bb` list
+            if opt.verbose == 1:
+                print("k.ccs=%s\n"%k.ccs)
+                #tID = loadTokenID(k.tokenIDs) # load token ID into `tID` list
+                print("k.tokenIDs=%s\n"%k.tokenIDs)
+            charImage = loadLineImage(k, opt)
             z=0
             for t in k.tokenIDs: # calculate performance using t (/tokens/`t`.png) matrix and its corresponding original image (.cseg.png) matrix
-                tokImage = loadTokenImage(b.tokens[t], b.bookDir)
-                mse = MSE(tokImage, charImage, k.ccs[z])
+                tokImage = loadTokenImage(b.tokens[t], b.bookDir, opt)
+                mse = MSE(tokImage, charImage, k.ccs[z], opt)
 ##                print "mse = %s"%mse
                 accMSE += mse
                 z += 1
     print("accMSE=%s"%(accMSE)) 
-    psnr = 20.0 * log10(255.0/sqrt(accMSE))        
-    return psnr
+#    psnr = 20.0 * log10(255.0/sqrt(accMSE))        
+    return accMSE
         
 def calculateImg2PDFPerformance(booksDirList, fileList, opt):
     path = os.path.dirname(fileList[0]) # get the working folder name  
@@ -200,21 +234,21 @@ def calculateImg2PDFPerformance(booksDirList, fileList, opt):
 
     pos= 50 # put some space for the top margin 
     c.drawString(20, height - pos, "Image")
-    c.drawString(500, height - pos, "PSNR")
+    c.drawString(450, height - pos, "MSE")
     pos = pos + 30
     for i in booksDirList:
-        if i[0] <> '4':
+        if not (i[0] == '4' or i[0] == '3'):
             continue
         b =  Book(i[2])
-        PSNR = getPerformance(b)
+        PSNR = getPerformance(b, opt)
         c.drawString(20, height - pos, i[1])
-        c.drawString(500, height - pos, str(PSNR))
+        c.drawString(450, height - pos, str(PSNR))
         pos = pos + 30
         if pos > height-50: # if end-of-page then create new page
             c.showPage()
             pos= 50
             c.drawString(20, height - pos, "Image")
-            c.drawString(500, height - pos, "PSNR")
+            c.drawString(450, height - pos, "MSE")
             pos = pos + 30
    
     c.showPage()
