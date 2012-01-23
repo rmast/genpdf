@@ -39,7 +39,7 @@ import reportlab.rl_config # used for TTF support
 
 # global variables:
 verbose     = 0         # output debugging information
-dpi         = 200       # resolution of the ouput images in the pdf
+dpi         = 300       # resolution of the output images in the pdf
 
 
 # ========= ImagePDF =========
@@ -56,19 +56,34 @@ def convert2ImagePDF(bookDir,pdfFileName,b,pdf):
         # width and height of the document image in pixels
         W = float(img.size[0])
         H = float(img.size[1])
-        # fit document image to PDF page maximizing the displayed area
+#        # fit document image to PDF page maximizing the displayed area
+#        if(W/H > ar):
+#            width = float(b.pageSize[0]) # width of the page in cm
+#            height= width/(W/H) # height of the page in cm
+#            if(verbose > 2):
+#                print(W/H, ar, width, height)
+#            pdf.drawInlineImage(img, 0,0,width*cm,height*cm) # use inline as each page is used only once
+#        if(W/H <= ar):
+#            height= float(b.pageSize[1])
+#            width = height/(H/W)
+#            if(verbose > 2):
+#                print(W/H, ar, width, height)
+#            pdf.drawInlineImage(img, 0,0,width*cm,height*cm) # use inline as each page is used only once
+        factor = 0.0
         if(W/H > ar):
             width = float(b.pageSize[0]) # width of the page in cm
-            height= width/(W/H) # height od the page in cm
-            if(verbose > 2):
-                print(W/H, ar, width, height)
-            pdf.drawInlineImage(img, 0,0,width*cm,height*cm) # use inline as each page is used only once
+            height= width/(W/H)
+            factor = b.pageSize[0]/W
+
         if(W/H <= ar):
             height= float(b.pageSize[1])
             width = height/(H/W)
-            if(verbose > 2):
-                print(W/H, ar, width, height)
-            pdf.drawInlineImage(img, 0,0,width*cm,height*cm) # use inline as each page is used only once
+            factor = b.pageSize[1]/H
+        resizeW = (1.0/2.54)*width*dpi # width of the image after resizing
+        resizeH = (1.0/2.54)*height*dpi # height of the image after resizing 
+        if(verbose > 1):
+            print("Size before %d x %d and after %d x %d" %(W,H,resizeW,resizeH))
+        pdf.drawInlineImage(img.resize((int(round(resizeW)),int(round(resizeH)))), 0,0,width*cm,height*cm) # use inline as each page is used only once
         
         pdf.showPage() # finish PDF page
     pdf.save() # save PDF to file

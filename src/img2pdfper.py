@@ -34,7 +34,7 @@ from reportlab.pdfgen import canvas
 import os 
 import datetime
 from reportlab.lib.pagesizes import A4
-from PIL import Image
+from PIL import Image, ImageDraw
 
 def createImageList(opt):
     imageFormats = [".jpg", ".tif", ".tiff", ".png", ".bmp"] #FIXME: add more image file types supported by Ocropus
@@ -72,7 +72,7 @@ def genPDF4ImageList(fileList, opt):
         nameNoExt = stripExt(i)
         for j in list(str(opt.pdfType)): # generate PDF type j
             booksDirList.append([j, i, nameNoExt+"t" + j])
-            cmd = ["./decapod-genpdf.py", "-t", j, "-b", i, "-d", (nameNoExt+"t" + j + ""), "-p", (nameNoExt + "[t" + j + "]" + ".pdf"), "-v", "2"]
+            cmd = ["./decapod-genpdf.py", "-t", j, "-b", i, "-d", (nameNoExt+"t" + j + ""), "-p", (nameNoExt + "[t" + j + "]" + ".pdf"), '-r', "%s"%opt.dpi, "-v", "2"]
             if opt.verbose == 1:
                 print "************** Now executing genpdf with image:", i, "\nCommand: ", cmd ," ************"
             begTime = time.time()
@@ -104,6 +104,13 @@ def loadLineBB(ccs):
 def loadTokenID(tokenIDs):
     return
 
+def setImage(im):
+    width, height = im.size
+    for i in range(width-1):
+        for j in range(height-1):
+            im.putpixel((i,j), (0,0,0))
+    return im
+
 def loadTokenImage(tokFileName, bookDir, opt):
 #    tokenFileName = bookDir + "/tokens/" + "%08i.png"%int(tokNum)
     im = Image.open(tokFileName)
@@ -114,6 +121,7 @@ def loadTokenImage(tokFileName, bookDir, opt):
 def loadLineImage(line, opt):
 #    lineFileName = pageDir + "%02i"%int(page.number) + "%04h"%int(line.) + "%08i.png"%int(num)
     im = Image.open(line.image)
+#    im = Image.open(line.csegFile)
     if opt.verbose==1:
         print(line.image,"\n")
     return im
@@ -145,7 +153,7 @@ def findBBox(image):
     return (x1, y1, x2, y2)
     
 def MSE(tokImage, charImage, bbx, opt):
-    xx1, yy1, xx2, yy2 = bbx
+    xx1, yy1, xx2, yy2 = bbx # bbx for a char from charImage that match tokImage
     x1 = int(xx1)
     y1 = int(yy1)
     x2 = int(xx2)
@@ -154,25 +162,46 @@ def MSE(tokImage, charImage, bbx, opt):
     xsize = x2 - x1 + 1
     ysize = y2 - y1 + 1
     bb = findBBox(tokImage)
+#    tokImage.putpixel((bb[0], bb[1]), (255,0,0))
+#    tokImage.putpixel((bb[2], bb[3]), (255,0,0))
+#    tokImage.show()
+#    bb = tokImage.getbbox()
     if opt.verbose == 1:
         print "bb = %s"%(bb,)
-    tokImageCrop = tokImage.crop(bb)
+    bbTemp = [bb[0], bb[1], bb[2]+1, bb[3]+1]
+    tokImageCrop = tokImage.crop(bbTemp)
+#    tokImageCrop.save("/home/hasan/Desktop/tokImageCrop.png")
+#    tokImageCrop.show()
     tokImageCropScaled = tokImageCrop.resize((xsize, ysize), Image.ANTIALIAS)# Resizing the CC rather than the whole image
+#    tokImageCropScaled.save("/home/hasan/Desktop/tokImageCropScaled.png")
     tokImageCropScaledPix = tokImageCropScaled.load() 
+#    charImage = charImage.transpose(Image.FLIP_TOP_BOTTOM)
     charImagePix = charImage.load()
-
+    charW, charH = charImage.size
+#    charImage.putpixel((x1,(charH - y1 - 1)), (255,0,0))
+#    charImage.putpixel((x2,(charH - y2 - 1)), (255,0,0))
+   
+#    tokImageCropScaled.show() #last test
+#    print "tokImage.size=%s"%((tokImage.size),)
+#    charImage.show()
+#    print "charImage.size=%s"%((charImage.size),)
+    
     if opt.verbose == 1:
         print "tokImage.size=%s"%((tokImage.size),)
         print "tokImageCrop.size=%s"%((tokImageCrop.size),)
-        print "tokImageScaled.size=%s"%((tokImageCropScaled.size),)
+        print "tokImageCropScaled.size=%s"%((tokImageCropScaled.size),)
         print "charImage.size=%s\n"%((charImage.size),)
 #    print  "xsize=%i"%xsize
 #    print  "ysize=%i"%ysize
-        
+##    tokCopy = tokImageCropScaled.copy()
+##   tokCopy = setImage(tokCopy)  
+            
     mse = 0.0
     xt = 0 # Token x coord
     yt = 0 # Token y coord
-    while y1 <= y2:
+    y1flip = charH-y2-1
+    y2flip = charH-y1-1
+    while  y1flip <= y2flip:
         x1 = int(xx1)
         xt = 0
         while x1 <= x2:
@@ -180,7 +209,11 @@ def MSE(tokImage, charImage, bbx, opt):
 #                print (xt, " ", yt, "[", tokImageCropScaledPix[xt,yt], "]")
 #                print (x1, " ", y1, "[", charImagePix[x1,y1], "]")
                 r1, g1, b1 = tokImageCropScaledPix[xt,yt]
-                r2, g2, b2 = charImagePix[x1,y1]
+                r2, g2, b2 = charImagePix[x1,y1flip]
+##                if r1 != r2: 
+##                    tokCopy.putpixel((xt,yt), (255,255,255))
+##                else:
+##                    tokCopy.putpixel((xt,yt), (0,0,0))
                 mse += (r1 - r2) * (r1 - r2)
 #                print "x=%i, y=%i, tokImage.getpixel((x,y)=%i, charImage.getpixel((x,y)=%i"%(x1, y1, r1, r2)
                 xt = xt + 1
@@ -191,7 +224,8 @@ def MSE(tokImage, charImage, bbx, opt):
 #                print "exception\n"                
 #                pass
         yt = yt + 1
-        y1 = y1 + 1   
+        y1flip = y1flip + 1   
+##    tokCopy.save("/home/hasan/Desktop/tok-org-diff.png")
     return (mse/((1.0 * xsize)*ysize))
     
 def getPerformance(b, opt):
@@ -237,10 +271,11 @@ def calculateImg2PDFPerformance(booksDirList, fileList, opt):
     c.drawString(450, height - pos, "MSE")
     pos = pos + 30
     for i in booksDirList:
-        if not (i[0] == '4' or i[0] == '3'):
-            continue
-        b =  Book(i[2])
-        PSNR = getPerformance(b, opt)
+        if i[0] == '4' or i[0] == '3':
+            b =  Book(i[2])
+            PSNR = getPerformance(b, opt)
+        else:
+            PSNR = -1
         c.drawString(20, height - pos, i[1])
         c.drawString(450, height - pos, str(PSNR))
         pos = pos + 30
@@ -262,6 +297,8 @@ def main(sysargv):
         type="string", help="Directory name for the source images. The '/' will be added (if not there)")
     parser.add_option("-t", "--type", default=1, dest="pdfType", type="int", 
         help="type of the output PDF file [1..4]. Can use more than one type simultaneously")
+    parser.add_option("-r", "--resolution", default=300, dest="dpi", type="int", 
+        help="resolution (default 300dpi)")
     parser.add_option("-v", "--verbose", default=0, dest="verbose", type="int", 
         help="verbose type: 0 (silent) or 1 (detailed)")
     (opt, args) = parser.parse_args()

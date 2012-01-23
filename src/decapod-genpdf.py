@@ -140,7 +140,7 @@ class Options:
         return cmd
 
     def generatePDFCMD(self):
-        cmd = [self.pdfGenCMD, '-d', "%s" %(self.bookDir), '-t', "%s"%self.pdfOutputType, '-p', '%s'%self.pdfFileName ,'-v', '%s'%self.verbose]
+        cmd = [self.pdfGenCMD, '-d', "%s" %(self.bookDir), '-t', "%s"%self.pdfOutputType, '-p', '%s'%self.pdfFileName, '-r', "%s"%self.dpi, '-v', '%s'%self.verbose]
         return cmd
         
 
