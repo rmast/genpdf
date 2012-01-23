@@ -93,8 +93,10 @@ def generateCoverPage(c, dateNowStr, timeNowStr, height):
     c.setFont("Helvetica", 15)
     c.drawString(100, 200, "Date: " + dateNowStr)
     c.drawString(100, 180, "Time: " + timeNowStr)
-    c.drawImage("./FBinformatik.png", 20, 81)
-    c.drawImage("./decapod.jpg", 200, 100, preserveAspectRatio=True, width=150)
+    if os.path.isfile("./FBinformatik.png"):
+        c.drawImage("./FBinformatik.png", 20, 81)
+    if os.path.isfile("./decapod.jpg"):
+        c.drawImage("./decapod.jpg", 200, 100, preserveAspectRatio=True, width=150)
     c.showPage()
     return
 
@@ -173,17 +175,19 @@ def MSE(tokImage, charImage, bbx, opt):
     tokImageCrop = tokImage.crop(bbTemp)
 ##    tokImageCrop.save("/home/hasan/Desktop/tokImageCrop.png")
 #    tokImageCrop.show()
-    tokImageCropScaled = tokImageCrop.resize((xsize, ysize), Image.BICUBIC)# Resizing the CC rather than the whole image
+    tokImageCropScaled = tokImageCrop.resize((xsize, ysize), Image.NEAREST)# Resizing the CC rather than the whole image
 ##    tokImageCropScaled.save("/home/hasan/Desktop/tokImageCropScaled.png")
     tokImageCropScaledPix = tokImageCropScaled.load() 
 #    charImage = charImage.transpose(Image.FLIP_TOP_BOTTOM)
     charImagePix = charImage.load()
     charW, charH = charImage.size
-##    charImage.putpixel((x1,(charH - y1 - 1)), (255,0,0))
-##    charImage.putpixel((x2,(charH - y2 - 1)), (255,0,0))
+##    charImage.putpixel((x1,(charH - y1 - 1)), (0,128,0))
+##    charImage.putpixel((x2,(charH - y2 - 1)), (0,128,0))
    
 #    tokImageCropScaled.show() #last test
 #    print "tokImage.size=%s"%((tokImage.size),)
+##    charImageCrop = charImage.crop([x1, charH-y2, x2, charH-y1])
+##    charImageCrop.save("/home/hasan/Desktop/charImageCrop.png")
 ##    charImage.show()
 #    print "charImage.size=%s"%((charImage.size),)
     
@@ -197,18 +201,24 @@ def MSE(tokImage, charImage, bbx, opt):
 ##    tokCopy = tokImageCropScaled.copy()
 ##    tokCopy = setImage(tokCopy)  
             
+    xcpt = 0
     mse = 0.0
     xt = 0 # Token x coord
     yt = 0 # Token y coord
-    y1flip = charH-y2-1
+    y1flip = charH-y2
     y2flip = charH-y1-1
     while  y1flip <= y2flip:
         x1 = int(xx1)
         xt = 0
-        while x1 <= x2:
+        while x1 < x2:
             try:
 #                print (xt, " ", yt, "[", tokImageCropScaledPix[xt,yt], "]")
 #                print (x1, " ", y1, "[", charImagePix[x1,y1], "]")
+##                tokImageCropScaled.putpixel((xt,yt), (255,0,0))
+##                tokImageCropScaled.save("/home/hasan/Desktop/tokImageCropScaled.png")
+##                charImage.putpixel((x1,y1flip), (255,0,0))
+##                charImage.save("/home/hasan/Desktop/charImage.png")
+               
                 r1, g1, b1 = tokImageCropScaledPix[xt,yt]
                 r2, g2, b2 = charImagePix[x1,y1flip]
 ##                if r1 != r2: 
@@ -222,10 +232,13 @@ def MSE(tokImage, charImage, bbx, opt):
             except: #FIXME: Correct by specify the cause of the exception
                 xt = xt + 1
                 x1 = x1 + 1
+                xcpt += 1
 #                print "exception\n"                
 #                pass
         yt = yt + 1
-        y1flip = y1flip + 1   
+        y1flip = y1flip + 1
+        if xcpt != 0:   
+            print "except= %i"%xcpt
 ##    tokCopy.save("/home/hasan/Desktop/tok-org-diff.png")
     return (mse/((1.0 * xsize)*ysize))
     
@@ -250,7 +263,9 @@ def getPerformance(b, opt):
 ##                print "mse = %s"%mse
                 accMSE += mse
                 z += 1
+    print("***************")
     print("accMSE=%s"%(accMSE)) 
+    print("***************")
 #    psnr = 20.0 * log10(255.0/sqrt(accMSE))        
     return accMSE
         
