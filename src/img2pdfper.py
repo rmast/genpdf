@@ -159,31 +159,32 @@ def MSE(tokImage, charImage, bbx, opt):
     x2 = int(xx2)
     y2 = int(yy2)
     width, height = tokImage.size
-    xsize = x2 - x1 + 1
-    ysize = y2 - y1 + 1
+    xsize = x2 - x1 #+ 1
+    ysize = y2 - y1 #+ 1
     bb = findBBox(tokImage)
 #    tokImage.putpixel((bb[0], bb[1]), (255,0,0))
 #    tokImage.putpixel((bb[2], bb[3]), (255,0,0))
 #    tokImage.show()
 #    bb = tokImage.getbbox()
     if opt.verbose == 1:
-        print "bb = %s"%(bb,)
+        print "token bb = %s"%(bb,)
+        print "char bb= %s"%(bbx,)
     bbTemp = [bb[0], bb[1], bb[2]+1, bb[3]+1]
     tokImageCrop = tokImage.crop(bbTemp)
-#    tokImageCrop.save("/home/hasan/Desktop/tokImageCrop.png")
+##    tokImageCrop.save("/home/hasan/Desktop/tokImageCrop.png")
 #    tokImageCrop.show()
-    tokImageCropScaled = tokImageCrop.resize((xsize, ysize), Image.ANTIALIAS)# Resizing the CC rather than the whole image
-#    tokImageCropScaled.save("/home/hasan/Desktop/tokImageCropScaled.png")
+    tokImageCropScaled = tokImageCrop.resize((xsize, ysize), Image.BICUBIC)# Resizing the CC rather than the whole image
+##    tokImageCropScaled.save("/home/hasan/Desktop/tokImageCropScaled.png")
     tokImageCropScaledPix = tokImageCropScaled.load() 
 #    charImage = charImage.transpose(Image.FLIP_TOP_BOTTOM)
     charImagePix = charImage.load()
     charW, charH = charImage.size
-#    charImage.putpixel((x1,(charH - y1 - 1)), (255,0,0))
-#    charImage.putpixel((x2,(charH - y2 - 1)), (255,0,0))
+##    charImage.putpixel((x1,(charH - y1 - 1)), (255,0,0))
+##    charImage.putpixel((x2,(charH - y2 - 1)), (255,0,0))
    
 #    tokImageCropScaled.show() #last test
 #    print "tokImage.size=%s"%((tokImage.size),)
-#    charImage.show()
+##    charImage.show()
 #    print "charImage.size=%s"%((charImage.size),)
     
     if opt.verbose == 1:
@@ -194,7 +195,7 @@ def MSE(tokImage, charImage, bbx, opt):
 #    print  "xsize=%i"%xsize
 #    print  "ysize=%i"%ysize
 ##    tokCopy = tokImageCropScaled.copy()
-##   tokCopy = setImage(tokCopy)  
+##    tokCopy = setImage(tokCopy)  
             
     mse = 0.0
     xt = 0 # Token x coord
@@ -269,6 +270,7 @@ def calculateImg2PDFPerformance(booksDirList, fileList, opt):
     pos= 50 # put some space for the top margin 
     c.drawString(20, height - pos, "Image")
     c.drawString(450, height - pos, "MSE")
+    c.drawString(525, height - pos, "PDF")
     pos = pos + 30
     for i in booksDirList:
         if i[0] == '4' or i[0] == '3':
@@ -277,7 +279,8 @@ def calculateImg2PDFPerformance(booksDirList, fileList, opt):
         else:
             PSNR = -1
         c.drawString(20, height - pos, i[1])
-        c.drawString(450, height - pos, str(PSNR))
+        c.drawString(450, height - pos, str(int(PSNR)))
+        c.drawString(525, height - pos, i[0])
         pos = pos + 30
         if pos > height-50: # if end-of-page then create new page
             c.showPage()
