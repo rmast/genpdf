@@ -57,6 +57,7 @@ def createImageList(opt):
                 foundFlag = 1;
         if foundFlag == 1:
             listFiltered.append(i) 
+    listFiltered.sort()
     return listFiltered
     
     
@@ -302,6 +303,7 @@ def calculateImg2PDFPerformance(booksDirList, fileList, opt):
             pos= 50
             c.drawString(20, height - pos, "Image")
             c.drawString(450, height - pos, "MSE")
+            c.drawString(525, height - pos, "PDF")
             pos = pos + 30
    
     c.showPage()
