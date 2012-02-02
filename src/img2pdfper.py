@@ -271,6 +271,9 @@ def getPerformance(b, opt):
     return accMSE
         
 def calculateImg2PDFPerformance(booksDirList, fileList, opt):
+    if len(fileList) == 0:
+        print "warn: No images to process.\nExiting."
+        return
     path = os.path.dirname(fileList[0]) # get the working folder name  
     dateTimeNow = datetime.datetime.now()
     dateNowStr = str(dateTimeNow.year) + "-" + "%02i"%dateTimeNow.month + "-" + "%02i"%dateTimeNow.day 

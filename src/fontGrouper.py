@@ -1,5 +1,29 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# (C) 2011-2012 University of Kaiserslautern 
+# 
+# You may not use this file except under the terms of the accompanying license.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License"); you
+# may not use this file except in compliance with the License. You may
+# obtain a copy of the License at http:#www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+# Project: Decapod
+# Section: genpdf module 
+# File: fontGrouper.py
+# Purpose: reconstruct document font(s)
+# Responsible: 
+# Reviewer (01-Aug-2011 onward): Hasan S. M. Al-Khaffaf (hasan@iupr.com)
+# Primary Repository: 
+# Web Site: www.iupr.com
+
 from ocrodir import *
 from numpy import *
 #from numpy.numarray import *
@@ -442,6 +466,7 @@ def explore(fontList,goalSet):
 #the sparse function is to be called when the matrix data structure consumes too much memory
 def exploreSPARSE(fontList,goalSet):
     ''' explore all nodes connected that are of the class that has not been found yet'''
+    print "start: exploreSPARSE()"
     canidates = {}
     for tID in fontList: 
         for x in b.tokens.keys():
@@ -451,6 +476,7 @@ def exploreSPARSE(fontList,goalSet):
             if (labels[x] in goalSet) and (count > 0):
                 #print "adding", labels[x]
                 canidates[(tID,x)] = count
+            print "explore token# = %i "%x
     return canidates
 
 def selectBest(canidates,goalSet,fontList,foundSet,allTokens):
@@ -535,7 +561,7 @@ def fillOutWordMatrix():
     for i in range(len(b.pages)):
         for j in range(len(b.pages[i].lines)):
             if(b.pages[i].lines[j].checkTokenable() == False): 
-                print "bad line"
+                print "[info] bad line (untokenable line)"
                 continue
             spaceCount = 0
             inSameWordList = []
@@ -1289,18 +1315,18 @@ def main():
                   dest="verbose",type="int",help="this value affects how much output will be displayed")                  
     parser.add_option("-f","--fontName",default="font",dest="fontName",help="name of the font")
     parser.add_option("-o","--outputLog",default="genericName",dest="o",help="name of log file")
-    parser.add_option("-S","--sparse",default= False, dest="sparse",help="use slower datastructure, that uses much less memory",  action="store_false") 
+    parser.add_option("-S","--sparse",default= False, dest="sparse",help="use slower datastructure, that uses much less memory",  action="store_true") 
 
     global options
     (options, args) = parser.parse_args()
     if options.bookDir is None:
         print "[ERROR] must set ocropus extended book directory path with -d option"
         exit(2)
-    if options.verbose >= 1:
-        print options.bookDir
-        print options.e
-        print options.k
-        print options.numFontClasses
+#    if options.verbose >= 1:
+#        print "Book Dir= %s"%options.bookDir
+#        print "e= %i"%options.e
+#        print "k= %i"%options.k
+#        print "Number of font classes= %i"%options.numFontClasses
     outputFile = "output_"+str(options.o)+"errorThresh"+str(options.e)+"K"+str(options.k)+"NUMCLASSES"+str(options.numFontClasses)+"numSwaps"+str(options.numSwaps)
     f = open(outputFile, 'w')
     logMsg(f, "GGS: Greedy Graph Segmentation")
@@ -1317,12 +1343,23 @@ def main():
     global b
     global tokenCounts
     tokenCounts = []
+    print "starts reading book structure-->"
     b = Book(options.bookDir)
-    
+    print "<--ends reading book structure....\n"
+    print "Number of tokens in b.token= %i"% len(b.tokens)
     #readInTokenCounts(options.bookDir+"/tokenCounts.txt")
     global n
-    if options.sparse: n = {}
-    else: n=zeros((max(b.tokens)+1,max(b.tokens)+1))
+    
+    if options.sparse == False and len(b.tokens) > 20000: #Hasan: avoiding program crash due to large memory allocation for 'n' array
+        print "[warn] fontGrouper requires huge memory size to process the current book\n[info]Switching from 2d array to sparse hash-map instead"
+        options.sparse = True
+        
+    if options.sparse: 
+        n = {}
+        print "[info] Using sparse hashmap for co-occurance matrix (requires less memory)"
+    else: 
+        n=zeros((max(b.tokens)+1,max(b.tokens)+1))
+        print "[info] Using 2d array for co-occurance matrix (fast in execution)"
     #here is where we change it to a sparse hashmap pointing to lists
     
     global labels
