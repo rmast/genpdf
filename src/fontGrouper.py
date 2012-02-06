@@ -335,7 +335,9 @@ def linkExplore(allTokens):
     goalSet = set(makeLargeGoalList())
     fontList,foundSet = greedyStart()
     lastFoundSet = set()
-    while( not goalSet.issuperset(foundSet) ): 
+    while( not goalSet.issuperset(foundSet) ):
+        if options.verbose >= 1: 
+            print "epoc= %i"%epoc
         if epoc == 0:
             if options.sparse:
                 canidates = exploreSPARSE(fontList,goalSet.difference(foundSet))
@@ -467,6 +469,7 @@ def explore(fontList,goalSet):
 def exploreSPARSE(fontList,goalSet):
     ''' explore all nodes connected that are of the class that has not been found yet'''
     print "start: exploreSPARSE()"
+    print "fontList=",fontList
     canidates = {}
     for tID in fontList: 
         for x in b.tokens.keys():
@@ -476,7 +479,8 @@ def exploreSPARSE(fontList,goalSet):
             if (labels[x] in goalSet) and (count > 0):
                 #print "adding", labels[x]
                 canidates[(tID,x)] = count
-            print "explore token# = %i "%x
+            if options.verbose >= 2:
+                print "explore token# = %i "%x
     return canidates
 
 def selectBest(canidates,goalSet,fontList,foundSet,allTokens):
@@ -1296,7 +1300,6 @@ def reconstructFonts(f):
 
 
 def main():
-
     #parse usr options
     parser = OptionParser()
     parser.add_option("-d", "--book", dest="bookDir",
@@ -1350,16 +1353,32 @@ def main():
     #readInTokenCounts(options.bookDir+"/tokenCounts.txt")
     global n
     
-    if options.sparse == False and len(b.tokens) > 20000: #Hasan: avoiding program crash due to large memory allocation for 'n' array
-        print "[warn] fontGrouper requires huge memory size to process the current book\n[info]Switching from 2d array to sparse hash-map instead"
-        options.sparse = True
+#    if options.sparse == False and len(b.tokens) > 20000: #Hasan: avoiding program crash due to large memory allocation for 'n' array
+#        print "[warn] fontGrouper requires huge memory size to process the current book."
+#        print "  [info] Switching from 2d array to sparse hash-map instead."
+#        print "    [warn] sparse hash map is slow and execution time could take hours [depends on book size]."
+#        print "      [tip] to speed up the process, use -s option to set numSwaps to 1 instead of the requested [or default] value of %i" % options.numSwaps
+#        options.sparse = True
         
     if options.sparse: 
         n = {}
-        print "[info] Using sparse hashmap for co-occurance matrix (requires less memory)"
+        print "[info] Using sparse hashmap for co-occurance matrix (requires less memory, but slow)"
     else: 
-        n=zeros((max(b.tokens)+1,max(b.tokens)+1))
-        print "[info] Using 2d array for co-occurance matrix (fast in execution)"
+        if b.tokens == {}:
+            print "[fatal error] No tokens were found in the book structure."
+            print "   [info] pages2lines stage could be the source of this error."
+            exit(2)
+        try:
+            n=zeros((max(b.tokens)+1,max(b.tokens)+1))
+            print "[info] Using 2d array for co-occurance matrix (fast in execution)"
+        except:
+            print "[warn] Not enough memory. fontGrouper requires huge memory size to process the current book."
+            print "  [info] Switching from 2d array to sparse hash-map instead."
+            print "    [warn] sparse hash map is slow and execution time could take hours [depends on book size]."
+            print "      [tip] to speed up the process, use -s option to set numSwaps to 1 instead of the requested [or default] value of %i" % options.numSwaps
+            options.sparse = True
+            n = {}
+            
     #here is where we change it to a sparse hashmap pointing to lists
     
     global labels
@@ -1370,7 +1389,7 @@ def main():
     fillOutWordMatrix()
     #findMaxNode()
     #fillOutSentenceMatrix()
-    
+  
 
     global allTokens
     allTokens = {}

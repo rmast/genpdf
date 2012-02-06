@@ -318,7 +318,7 @@ def convert2FontPDF(bookDir,pdfFileName,b,pdf):
                 # set font according to information in fontID file
                 pdf.setFont("%d" %(b.pages[i].lines[j].wordFont[k]), b.pages[i].lines[j].fontHeight/dpi*72/factorScalePx)
                 #print "[info] ocro2pdf::convert2FontPDF: computed font size = %d %f" %(b.pages[i].lines[j].fontHeight/dpi*72*factor,factor)
-                pdf.setFont("Helvetica", b.pages[i].lines[j].fontHeight/dpi*72/factorScalePx) #Hasan: uncommented this line
+                #pdf.setFont("Helvetica", b.pages[i].lines[j].fontHeight/dpi*72/factorScalePx) #Hasan: uncommented this line
                 
                 # draw character in correct position
                 pdf.drawString(ccPos[0]*factor*cm, baseLine*factor*cm, b.pages[i].lines[j].words[k])        
