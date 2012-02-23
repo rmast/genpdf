@@ -39,9 +39,9 @@
         try {
 
         for(int pageno=1;pageno<bookstore.numberOfPages();pageno++) {
-            char fn[128];  
+            char fn[1000];  //Hasan: changed from 128 to 1000
             sprintf(fn,"%s%04d.pseg",book_dir,pageno);
-            char fnIn[128];
+            char fnIn[1000]; //Hasan: changed from 128 to 1000
             sprintf(fnIn,"%s.png",fn);
 
             intarray pageSeg;
@@ -295,14 +295,21 @@
                 if( verbose >= 1)printf("remerging....\n");
                 binned->remerge(reconstructBook);//binned->remerge();//
             }
-            if( verbose >= 1)printf("outputing tokens\n");
+            if( verbose >= 1) printf("outputing tokens\n");
             binned->output_tokens(book_dir);
-            if( verbose >= 1)printf("outputing reconstruct info\n");
+            if( verbose >= 1) printf ("finished output_tokens\n");
+            
+            if( verbose >= 1) printf("outputing reconstruct info\n");
             output_patInfoInBookFormat(reconstructBook,*bookstore,verbose);
+            if( verbose >= 1) printf("finished output_PatInfoInBookFormat\n");
+            
             output_stats(*binned,verbose);
-            if( verbose >= 1)printf("outputing seg2bbox info\n");
+            
+            if( verbose >= 1) printf("outputing seg2bbox info\n");
             if (seg2bboxFlag )seg2bbox(book_dir,*bookstore,verbose);
-            if( verbose >= 1)binned->tokenCounts(book_dir);
+            if( verbose >= 1) printf("fisnished seg2bbox\n");
+            
+            if( verbose >= 1) binned->tokenCounts(book_dir);
         }catch(const char *e) {
             fprintf(stderr,"error: %s\n",e);
         } 

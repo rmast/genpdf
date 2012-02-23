@@ -906,8 +906,9 @@ def makeLessSupervisedFont(fontList,i):
 #    fontforge.setPrefs("AutotraceArgs","-u 20")#Hasan: Added this line
     FONT=fontforge.font()
     fontforge.setPrefs("PreferPotrace", 1) # Hasan: added this line: Setting Potrace as the prefered boundray tracer
+#    fontforge.setPrefs("AutotraceAsk", "-O 100 -t 1 -u 30 -a 0.0 -x 0.5 -z POTRACE_TURNPOLICY_BLACK") # Hasan: added this line: Setting the parameters of the tracing library
     fontforge.setPrefs("AutotraceAsk", "-O 0.5 -u 1 -t 1") # Hasan: added this line: Setting the parameters of the tracing library
-
+    print "Potrace param were set...."
     #open known font
     font = fontforge.open("DejaVuSans.sfd") 
     #the information from the module font is used in the following way:
@@ -922,12 +923,33 @@ def makeLessSupervisedFont(fontList,i):
             c = FONT.createChar(ord(labels[Tid]))      #generate a new char #int represents unicode position
 #            if (labels[Tid] == 'A' or labels[Tid] == 'a'): #Hasan: 'if' Added for debug purpose
 #                print("<<<",labels[Tid],">>>")
-            tempImageFileName = padWithPil(b.tokens[Tid])       
+            tempImageFileName = padWithPil(b.tokens[Tid])   
+#            ttt = Image.open(tempImageFileName)
+#            (xsize, ysize) = ttt.size
+#            xsize *= 2
+#            ysize *= 2
+#            ttt = ttt.resize((xsize,ysize))
+#            ttt.save("xyz"+tempImageFileName)
+#            print "tempImageFileName=%s"% "xyz"+tempImageFileName     
+#            c.importOutlines("xyz"+tempImageFileName)         #load outline
+            #on 64bit ubuntu 'c.autotrace()' does not work as expected...
             c.importOutlines(tempImageFileName)         #load outline
             os.remove(tempImageFileName)
-            #on 64bit ubuntu 'c.autotrace()' does not work as expected...
-            c.autoTrace()   #trace  
+            c.autoTrace()   #trace
+#            print "active layer", c.background
+#            c.importOutlines(tempImageFileName)         #load outline
+#            os.remove(tempImageFileName)
+
+#            c.transform([[0.5,1],[1,0.5]],("partialRefs","round") ) # causes error
+#            c.nltransform("x/2","y/2") # works fine
+#            c.simplify([0.00001, ("nearlyhvlines", "forcelines")]) #causes error
+#            if labels[Tid] in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPKRSTUVWXYZ":
+#                c.export("~/Desktop/Exp01Small/Times/300dpi/book1/"+labels[Tid]+".png")
             xminR,yminR, xmaxR,ymaxR = c.boundingBox()
+#            xminR /= 2
+#            yminR /= 2
+#            xmaxR /= 2
+#            ymaxR /= 2
             fH = ymaxR - yminR
             fW = xmaxR - xminR
             cH = allTokens[Tid].averageH 
@@ -949,6 +971,10 @@ def makeLessSupervisedFont(fontList,i):
 
             #next yscale translate
             xminR,yminR,xmaxR,ymaxR = c.boundingBox()
+#            xminR /= 2
+#            yminR /= 2
+#            xmaxR /= 2
+#            ymaxR /= 2
             if options.verbose >=3: print c.boundingBox()
             xminK,yminK, xmaxK,ymaxK = font[ord(labels[Tid])].boundingBox()
             baselineProp = yminK / (ymaxK-yminK)
@@ -959,6 +985,10 @@ def makeLessSupervisedFont(fontList,i):
             c.transform(translatemax) #makes the size relative to cseg bbox
             #next xscale translate to pad the image
             xminR,yminR,xmaxR,ymaxR = c.boundingBox() #Hasan: BB in em units ?!?!
+#            xminR /= 2
+#            yminR /= 2
+#            xmaxR /= 2
+#            ymaxR /= 2
             xlength = xmaxR - xminR
             guessXpad = xlength/7
             translatemax = psMat.translate(guessXpad,0)
@@ -966,11 +996,19 @@ def makeLessSupervisedFont(fontList,i):
 
             # wrong way to do it
             xminR,yminR, xmaxR,ymaxR = c.boundingBox()
+#            xminR /= 2
+#            yminR /= 2
+#            xmaxR /= 2
+#            ymaxR /= 2
             #K stands for known 
             translatemax = psMat.translate((-1*xminR),0) 
             c.transform(translatemax)   #place character on orgin (0,0)
             
             xminR,yminR,xmaxR,ymaxR = c.boundingBox()
+#            xminR /= 2
+#            yminR /= 2
+#            xmaxR /= 2
+#            ymaxR /= 2
             xlength = xmaxR - xminR
             #add backpadding
             #if allTokens[Tid].avgBackDelta() is None:
@@ -985,6 +1023,10 @@ def makeLessSupervisedFont(fontList,i):
             c.transform(translatemax)             
             
             xminR,yminR,xmaxR,ymaxR = c.boundingBox()
+#            xminR /= 2
+#            yminR /= 2
+#            xmaxR /= 2
+#            ymaxR /= 2
             xlength = xmaxR - xminR
             #if allTokens[Tid].avgForwardDelta() is None:
             #if int(xlength/6) < 3:
