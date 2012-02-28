@@ -36,7 +36,7 @@
     outputs: updated book_dir
     */
     void seg2bbox(const char* book_dir,IBookStore &bookstore, int verbose) {
-        try {
+//        try {
 
         for(int pageno=1;pageno<bookstore.numberOfPages();pageno++) {
             char fn[1000];  //Hasan: changed from 128 to 1000
@@ -85,10 +85,10 @@
     }
         }
 
-        }
-        catch(const char *oops) {
-            fprintf(stderr,"oops: %s\n",oops);
-        }
+//        }
+//        catch(const char *oops) {
+//            fprintf(stderr,"oops: %s\n",oops);
+//        }
         
     }    
 

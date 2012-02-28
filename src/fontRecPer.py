@@ -325,7 +325,7 @@ def MSE(tokImage, charImage, bbx, opt):
    
 #    tokImageCropScaled.show() #last test
 #    print "tokImage.size=%s"%((tokImage.size),)
-    charImageCrop = charImage.crop([x1, charH-y2, x2, charH-y1])
+#    charImageCrop = charImage.crop([x1, charH-y2, x2, charH-y1])
     if opt.verbose == 1:
         print "charImageCrop.mode, charImageCrop.histogram", charImageCrop.mode, charImageCrop.histogram()
 #    charImageCrop.save("/home/hasan/Desktop/charImageCrop.png")
@@ -390,9 +390,11 @@ def getPerformance(oGlyphImageDict, b, opt):
     psnr = 0.0
     accMSE = 0.0
     mse = 0.0
+    accPenalty = 0.0
     oGlyphImageDictKeys = oGlyphImageDict.keys()
 #    print b.tokens
     for i in range(len(b.pages)):
+        print "%i: line/page= %i"%(i,len(b.pages[i].lines)) 
         for j in range(len(b.pages[i].lines)):
             k = b.pages[i].lines[j]
                 #bb = loadLineBB(k.ccs) # load BB for each char in the line into `bb` list
@@ -409,8 +411,16 @@ def getPerformance(oGlyphImageDict, b, opt):
     ##                print "mse = %s"%mse
                         accMSE += mse
                         z += 1
+            else:
+#                for i in oGlyphImageDictKeys:
+#                    size = oGlyphImageDict[i].size
+                accMSE += 49 * 0.01*(57*101)* (64**2) # NumCharperLine * (0.25*sizeOfLetter_a) * (255-0)*(255-0)
+        if i != 0 and i != len(b.pages)-1: # adding penalty to all missing lines of pages except 1st and last page
+            if len(b.pages[i].lines) < 48:
+                accMSE += abs(48 - len(b.pages[i].lines)) * 49 * 0.01*(57*101)* (64**2)
+    
     print("***************")
-    print("accMSE=%s"%(accMSE)) 
+    print("accMSE=%i"%(accMSE)) 
     print("***************")
 #    psnr = 20.0 * log10(255.0/sqrt(accMSE))        
     return accMSE
