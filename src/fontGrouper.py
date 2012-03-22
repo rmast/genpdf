@@ -40,7 +40,7 @@ from optparse import OptionParser
 import os
 from datetime import datetime
 from inspect import currentframe #Hasan: Added this line
-
+import subprocess
 
 class CandidateFont():
     '''class to hold tokenSet that has been grouped into a CandidateFont'''
@@ -923,18 +923,24 @@ def makeLessSupervisedFont(fontList,i):
             c = FONT.createChar(ord(labels[Tid]))      #generate a new char #int represents unicode position
 #            if (labels[Tid] == 'A' or labels[Tid] == 'a'): #Hasan: 'if' Added for debug purpose
 #                print("<<<",labels[Tid],">>>")
-            tempImageFileName = padWithPil(b.tokens[Tid])   
-#            ttt = Image.open(tempImageFileName)
-#            (xsize, ysize) = ttt.size
-#            xsize *= 2
-#            ysize *= 2
-#            ttt = ttt.resize((xsize,ysize))
-#            ttt.save("xyz"+tempImageFileName)
-#            print "tempImageFileName=%s"% "xyz"+tempImageFileName     
-#            c.importOutlines("xyz"+tempImageFileName)         #load outline
+            tempImageFileName = padWithPil(b.tokens[Tid])
+#            retCode = subprocess.call(["mkbitmap", "-f", "2", "-s", "1", "-t", "0.48", "-o", tempImageFileName+"123.png", tempImageFileName])  
+            if options.scale:
+                ttt = Image.open(tempImageFileName)
+                (xsize, ysize) = ttt.size
+                xsize *= 2
+                ysize *= 2
+                ttt = ttt.resize((xsize,ysize),Image.BICUBIC)
+                ttt.save("xyz"+tempImageFileName)
+                print "tempImageFileName=%s"% "xyz"+tempImageFileName     
+                c.importOutlines("xyz"+tempImageFileName)         #load outline
             #on 64bit ubuntu 'c.autotrace()' does not work as expected...
-            c.importOutlines(tempImageFileName)         #load outline
-            os.remove(tempImageFileName)
+#            c.importOutlines(tempImageFileName)         #load outline
+                os.remove(tempImageFileName)
+                os.remove("xyz"+tempImageFileName)
+            else:
+                c.importOutlines(tempImageFileName)         #load outline
+                
             c.autoTrace()   #trace
 #            print "active layer", c.background
 #            c.importOutlines(tempImageFileName)         #load outline
@@ -1360,7 +1366,8 @@ def main():
                   dest="verbose",type="int",help="this value affects how much output will be displayed")                  
     parser.add_option("-f","--fontName",default="font",dest="fontName",help="name of the font")
     parser.add_option("-o","--outputLog",default="genericName",dest="o",help="name of log file")
-    parser.add_option("-S","--sparse",default= False, dest="sparse",help="use slower datastructure, that uses much less memory",  action="store_true") 
+    parser.add_option("-S","--sparse",default= False, dest="sparse",help="use slower datastructure, that uses much less memory",  action="store_true")
+    parser.add_option("-x","--scale",default= False, dest="scale",help="scale the token 100% before tracing",  action="store_true")
 
     global options
     (options, args) = parser.parse_args()
@@ -1389,6 +1396,9 @@ def main():
     global tokenCounts
     tokenCounts = []
     print "starts reading book structure-->"
+    if not os.path.exists(options.bookDir):
+        print "Error: path '%s' does not exist"%options.bookDir
+        return
     b = Book(options.bookDir)
     print "<--ends reading book structure....\n"
     print "Number of tokens in b.token= %i"% len(b.tokens)
