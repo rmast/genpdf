@@ -36,7 +36,7 @@
     outputs: updated book_dir
     */
     void seg2bbox(const char* book_dir,IBookStore &bookstore, int verbose) {
-//        try {
+//        try {  //Hasan: commented out the 'try' and 'catch' statement
 
         for(int pageno=1;pageno<bookstore.numberOfPages();pageno++) {
             char fn[1000];  //Hasan: changed from 128 to 1000

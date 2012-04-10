@@ -390,7 +390,11 @@ def getPerformance(oGlyphImageDict, b, opt):
     psnr = 0.0
     accMSE = 0.0
     mse = 0.0
-    accPenalty = 0.0
+    Llen = 0
+    w = 0
+    Achar = 0
+    Evalue = 0
+    LinperPage = 48
     oGlyphImageDictKeys = oGlyphImageDict.keys()
 #    print b.tokens
     for i in range(len(b.pages)):
@@ -414,10 +418,10 @@ def getPerformance(oGlyphImageDict, b, opt):
             else:
 #                for i in oGlyphImageDictKeys:
 #                    size = oGlyphImageDict[i].size
-                accMSE += 49 * 0.01*(57*101)* (64**2) # NumCharperLine * (0.25*sizeOfLetter_a) * (255-0)*(255-0)
+                accMSE +=  llen * w * (Achar) * (Evalue) # NumCharperLine * (0.25*sizeOfLetter_a) * (255-0)*(255-0)
         if i != 0 and i != len(b.pages)-1: # adding penalty to all missing lines of pages except 1st and last page
-            if len(b.pages[i].lines) < 48:
-                accMSE += abs(48 - len(b.pages[i].lines)) * 49 * 0.01*(57*101)* (64**2)
+            if len(b.pages[i].lines) < LinperPage:
+                accMSE += abs(LinperPage - len(b.pages[i].lines)) * llen * w * (Achar) * (Evalue)
     
     print("***************")
     print("accMSE=%i"%(accMSE)) 
