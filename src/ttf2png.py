@@ -16,7 +16,8 @@
 # Project: Decapod
 # Section: genpdf module 
 # File: ttf2png.py
-# Purpose: Create a database of glyphs from TTF file.
+# Purpose: Create a database of glyphs from TTF file. The database will be then fed to EigenFont(EigenFace) application for font recognition training.
+#            The glyphs one font will be stored in a folder with the name f0000\, f0001, etc and the files in the form a.png, b.png, etc
 # Responsible: Hasan S. M. Al-Khaffaf (hasan@iupr.com)
 # Reviewer: 
 # Primary Repository: 
@@ -28,6 +29,7 @@ import fontforge
 import glob, os
 from optparse import OptionParser 
 from PIL import Image
+import json
 #from numpy.lib.type_check import imag
 
 def initFontForge():
@@ -77,7 +79,8 @@ def createFontGlyphsFiles(fontDict, outDir, ext, verbose, crop, candidateChar = 
         glyphsDict = {}
         for j in candidateChar:
             if not j in font:
-                print "warn: '%s' is not in font '%s'"%(j, fontName)
+                if verbose >0:
+                    print "warn: '%s' is not in font '%s'"%(j, fontName)
                 continue
             if verbose > 0:
                 print "Processing char %s=%d"%(j,ord(j))
@@ -85,16 +88,14 @@ def createFontGlyphsFiles(fontDict, outDir, ext, verbose, crop, candidateChar = 
             if not os.path.isdir(glyphPath):
                 os.makedirs(glyphPath)
             fullPath = glyphPath + j + '.' + ext
-#            glyphPathsList.append(fullPath)
-            
             glyph.export(fullPath)
-            image = Image.open(fullPath)
-            if crop:
-                bbx = findBBox(image)
-                image = image.crop(bbx)
-                image.save(fullPath)
-            glyphsDict[j] = [fullPath, image]
-#        fontDict[i].append(glyphPathsList)
+            if ext in ["bmp", "png"]:
+                image = Image.open(fullPath)
+                if crop:
+                    bbx = findBBox(image)
+                    image = image.crop(bbx)
+                    image.save(fullPath)
+                glyphsDict[j] = [fullPath, image]
         fontDict[i].append(glyphsDict)
     return fontDict
    
@@ -112,7 +113,7 @@ def getMaxDimOfAllGlyphs(fontDict):
             maxv[1] = i[1]
     return maxv
 
-# This function is taken from: http://mail.python.org/pipermail/image-sig/2006-January/003724.html
+# The 'maxSize' function is taken from: http://mail.python.org/pipermail/image-sig/2006-January/003724.html
 def maxSize(image, maxSize, method = 3):
     """ im = maxSize(im, (maxSizeX, maxSizeY), method = Image.BICUBIC)
 
@@ -169,7 +170,6 @@ def findBBox(image):
         while i<xsize:
             r = image.getpixel((i,j))
             if r >= 128:
-#                print "x=%i, y=%i, r = %s"% (i, j, image.getpixel((i,j))) 
                 if i < x1:
                     x1 = i
                 if j < y1:
@@ -182,6 +182,16 @@ def findBBox(image):
         j += 1
     return (x1, y1, x2+1, y2+1)
 
+def saveAsJSON(fontDict, outDir):
+    dic ={}
+    for i in fontDict.keys():
+        dic[i] = fontDict[i][0]
+    str = json.dumps(dic)
+    f = open(outDir + "ttf2png.txt", 'w')
+    f.write(str + '\n')
+    f.close()
+    return 
+
 def main():
     parser = OptionParser()
     parser.add_option("-d", "--directory", default="", dest="inDir", 
@@ -189,21 +199,22 @@ def main():
     parser.add_option("-o", "--output", default="", dest="outDir", type="string", 
         help="Directory name for the output files. The '/' will be added (if not there)")
     parser.add_option("-f", "--format", default="png", dest="format", type="string", 
-        help="format type: PNG, BMP, EPS, SVG")
+        help="Format type: PNG, BMP, EPS, PDF, SVG")
     parser.add_option("-t", "--filter", default="ANTIALIAS", dest="filter", type="string", 
-        help="filter type: NEAREST, BILINEAR, BICUBIC, ANTIALIAS")
+        help="Filter type: NEAREST, BILINEAR, BICUBIC, ANTIALIAS")
     parser.add_option("-c", "--crop", default=False, dest="crop",  
-        help="crop to the bounding box", action="store_true")
+        help="Crop to the bounding box", action="store_true")
     parser.add_option("-r", "--resize", default=False, dest="resize", 
-        help="scale all images to one size (the largest width and height of glyphs)", action="store_true")
+        help="Scale all images to one size (the largest width and height of glyphs)", action="store_true")
     parser.add_option("-s", "--scale", default=False, dest="scale", 
-        help="scale the glyphs inside the images to fit within the image canvas", action="store_true")
-#    parser.add_option("-S","--sparse", default= False, dest="sparse", help="use slower data structure, that uses much less memory", action="store_true")
+        help="Scale the glyphs inside the images to fit within the image canvas", action="store_true")
+    parser.add_option("-S", "--size", default=-1, dest="size", type="int", 
+        help="Force the use of specified square canvas (size*size). However, the provided size should be large enough to contain the glyphs (glyphs will not be scaled to fit the canvas)")
     parser.add_option("-v", "--verbose", default=0, dest="verbose", type="int", 
-        help="verbose mode: 0 (silent) or 1 (detailed)")
+        help="Verbose mode: 0 (silent) or 1 (detailed)")
     (opt, args) = parser.parse_args()
     if opt.inDir == "" or opt.outDir =="":
-        print "Usage: ./ttf2png.py [-f png|bmp|eps] [-t NEAREST|BILINEAR|BICUBIC|ANTIALIAS] [-c] [-r] [-v] -d fontDir/ -o glyphsDir/"
+        print "Usage: ./ttf2png.py [-f png|bmp|eps|pdf|svg] [-t NEAREST|BILINEAR|BICUBIC|ANTIALIAS] [-S size] [-c] [-r] [-s] [-v] -d fontDir/ -o glyphsDir/"
         print ""
         return 
     
@@ -220,22 +231,34 @@ def main():
     opt.format = opt.format.lower()
     opt.filter = opt.filter.upper()
     
+    if opt.format in ['bmp', 'png'] and opt.resize and opt.crop and opt.scale:
+        print "Info: The three parameters -r -c -s options are all provided. The -s parameter will be ignored."
+        opt.scale = False
+    if opt.format in ['eps', 'svg', 'pdf'] and (opt.resize or opt.crop or opt.scale):
+        print "Info: Using vector format (%s), hence the three parameters -r -c -s will be ignored [if provided]."%opt.format
+
     initFontForge()
     
     fontDict = createFontDict(opt.inDir, opt.outDir, opt.format)
     if fontDict == {}:
         print "Error: the input font directory is empty"
         exit(3)
-    if opt.format in ['bmp', 'png']: 
-        fontDict = createFontGlyphsFiles(fontDict, opt.outDir, opt.format, opt.verbose, opt.crop)
-        if opt.resize:
-            maxv = getMaxDimOfAllGlyphs(fontDict)
-            if opt.verbose > 0:
-                print "Max width & height:", maxv
-            maxv = [max(maxv[0],maxv[1]), max(maxv[0],maxv[1])]
+    fontDict = createFontGlyphsFiles(fontDict, opt.outDir, opt.format, opt.verbose, opt.crop)
+    if opt.format in ['bmp', 'png', 'eps', 'svg', 'pdf']: 
+        if opt.resize or opt.scale:
+            if opt.size == -1:
+                maxv = getMaxDimOfAllGlyphs(fontDict)
+                maxval = max(maxv[0],maxv[1])
+                if opt.verbose > 0:
+                    print "Max width & height:", maxv
+                    print "Images width & height will be set to %i*%i"%(maxval, maxval)
+                maxv = [maxval, maxval]
+            else:
+                maxv = [opt.size, opt.size]
             resizeAllGlyphstoMax(fontDict, maxv, opt.scale, opt.filter)
     else:
         print "Error: '%s' Unsupported file format."% opt.format
+    saveAsJSON(fontDict, opt.outDir)
     print "End-of-Program: ttf2png.py"
     return 
     
