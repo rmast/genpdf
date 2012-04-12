@@ -15,15 +15,17 @@
 # 
 # Project: Decapod
 # Section: genpdf module 
-# File: ttf2png.py
-# Purpose: Create a database of glyphs from TTF file. The glyphs belongs to one font will be stored in a folder name f0000\, f0001\, etc and 
-#            the files in the form a.png, b.png, etc
+# File: ttf2png1.py
+# Purpose: Create a database of glyphs from TTF file. The database will be then fed to EigenFont(EigenFace) application for font recognition training.
+#            The glyphs belongs to one font will be stored in many folders with the name a\, b\, etc and the files of one class letter (like 'a') in 
+#            the form 0000.png, 00001.png, etc
 # Responsible: Hasan S. M. Al-Khaffaf (hasan@iupr.com)
 # Reviewer: 
 # Primary Repository: 
 # Web Sites: www.iupr.com
 
 
+#from ocrodir import *
 import fontforge
 import glob, os
 from optparse import OptionParser 
@@ -37,16 +39,17 @@ def loadFont(fontName):
         print "[fatal Error]: The file '%s' does not exist or is not a file"% fontName
         return None
 
-def createFontList(dir):
+def createFontList(dir1):
     imageFormats = [".ttf", "pfb"] #FIXME: add more font file types supported by FontForge
     listFiltered = []
-    list1 = glob.glob(dir + "*.*") 
+    list1 = glob.glob(dir1 + "*.*") 
     list1.sort()
     #filter the list by removing non-fonts
     for i in list1:
         foundFlag = 0
         # filter out non-fonts
         for j in imageFormats:
+#            str = i[len(i)-len(j):]
             if j == (i[len(i)-len(j):]).lower():
                 foundFlag = 1
         if foundFlag == 1:
@@ -63,10 +66,18 @@ def createFontDict(inDir, outDir, ext):
     return fontDict
 
 def createFontGlyphsFiles(fontDict, outDir, ext, verbose, crop, candidateChar = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"):
+    glyphsDic = {}
+    for i in candidateChar:
+        glyphPath = outDir + "%s/"%i
+        if not os.path.isdir(glyphPath):
+            os.makedirs(glyphPath)
+        glyphsDic[i] = glyphPath
+       
     for i in fontDict.keys():
         fontName = fontDict[i][0]
-        glyphPath = outDir + "f%04d/"%i 
+#        glyphPath = outDir + "f%04d/"%i 
         font = loadFont(fontName)
+#        glyphPathsList = []
         glyphsDict = {}
         for j in candidateChar:
             if not j in font:
@@ -76,9 +87,9 @@ def createFontGlyphsFiles(fontDict, outDir, ext, verbose, crop, candidateChar = 
             if verbose > 0:
                 print "Processing char %s=%d"%(j,ord(j))
             glyph = font[j]
-            if not os.path.isdir(glyphPath):
-                os.makedirs(glyphPath)
-            fullPath = glyphPath + j + '.' + ext
+#            if not os.path.isdir(glyphPath):
+#                os.makedirs(glyphPath)
+            fullPath = glyphsDic[j] + "%04d"%i + '.' + ext
             glyph.export(fullPath)
             if ext in ["bmp", "png"]:
                 image = Image.open(fullPath)
@@ -178,7 +189,7 @@ def saveAsJSON(fontDict, outDir):
     for i in fontDict.keys():
         dic[i] = fontDict[i][0]
     str1 = json.dumps(dic)
-    f = open(outDir + "ttf2png.txt", 'w')
+    f = open(outDir + "ttf2png1.txt", 'w')
     f.write(str1 + '\n')
     f.close()
     return 
@@ -188,7 +199,7 @@ def saveAsTXT(fontDict, outDir, candidateChar = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcde
     for i in candidateChar:
         for j in fontDict.keys():
             if i in fontDict[j][2]:
-                f.write(str(j))
+                f.write(str(ord(i)))
                 f.write(";")
                 f.write(fontDict[j][2][i][0])
                 f.write("\n")
@@ -198,7 +209,7 @@ def saveAsTXT(fontDict, outDir, candidateChar = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcde
 def main():
     parser = OptionParser()
     parser.add_option("-d", "--directory", default="", dest="inDir", 
-        type="string", help="Directory name for the ttf font files. The '/' will be added (if not there)")
+        type="string", help="Directory name for the ttf (or pfb) font files. The '/' will be added (if not there)")
     parser.add_option("-o", "--output", default="", dest="outDir", type="string", 
         help="Directory name for the output files. The '/' will be added (if not there)")
     parser.add_option("-f", "--format", default="png", dest="format", type="string", 
@@ -217,7 +228,7 @@ def main():
         help="Verbose mode: 0 (silent) or 1 (detailed)")
     (opt, args) = parser.parse_args()
     if opt.inDir == "" or opt.outDir =="":
-        print "Usage: ./ttf2png.py [-f png|bmp|eps|pdf|svg] [-t NEAREST|BILINEAR|BICUBIC|ANTIALIAS] [-S size] [-c] [-r] [-s] [-v] -d fontDir/ -o glyphsDir/"
+        print "Usage: ./ttf2png1.py [-f png|bmp|eps|pdf|svg] [-t NEAREST|BILINEAR|BICUBIC|ANTIALIAS] [-S size] [-c] [-r] [-s] [-v] -d fontDir/ -o glyphsDir/"
         print ""
         return 
     
@@ -261,7 +272,7 @@ def main():
         print "Error: '%s' Unsupported file format."% opt.format
     saveAsJSON(fontDict, opt.outDir)
     saveAsTXT(fontDict, opt.outDir)
-    print "End-of-Program: ttf2png.py"
+    print "End-of-Program: ttf2png1.py"
     return 
     
 if __name__ == "__main__":
