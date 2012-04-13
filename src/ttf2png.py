@@ -62,7 +62,7 @@ def createFontDict(inDir, outDir, ext):
         c += 1
     return fontDict
 
-def createFontGlyphsFiles(fontDict, outDir, ext, verbose, crop, candidateChar = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"):
+def createFontGlyphsFiles1(fontDict, outDir, ext, verbose, crop, candidateChar = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"):
     for i in fontDict.keys():
         fontName = fontDict[i][0]
         glyphPath = outDir + "f%04d/"%i 
@@ -79,6 +79,42 @@ def createFontGlyphsFiles(fontDict, outDir, ext, verbose, crop, candidateChar = 
             if not os.path.isdir(glyphPath):
                 os.makedirs(glyphPath)
             fullPath = glyphPath + j + '.' + ext
+            glyph.export(fullPath)
+            if ext in ["bmp", "png"]:
+                image = Image.open(fullPath)
+                if crop:
+                    bbx = findBBox(image)
+                    image = image.crop(bbx)
+                    image.save(fullPath)
+                glyphsDict[j] = [fullPath, image]
+        fontDict[i].append(glyphsDict)
+    return fontDict
+   
+def createFontGlyphsFiles2(fontDict, outDir, ext, verbose, crop, candidateChar = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"):
+    glyphsDic = {}
+    for i in candidateChar:
+        glyphPath = outDir + "%s/"%i
+        if not os.path.isdir(glyphPath):
+            os.makedirs(glyphPath)
+        glyphsDic[i] = glyphPath
+       
+    for i in fontDict.keys():
+        fontName = fontDict[i][0]
+#        glyphPath = outDir + "f%04d/"%i 
+        font = loadFont(fontName)
+#        glyphPathsList = []
+        glyphsDict = {}
+        for j in candidateChar:
+            if not j in font:
+                if verbose >0:
+                    print "warn: '%s' is not in font '%s'"%(j, fontName)
+                continue
+            if verbose > 0:
+                print "Processing char %s=%d"%(j,ord(j))
+            glyph = font[j]
+#            if not os.path.isdir(glyphPath):
+#                os.makedirs(glyphPath)
+            fullPath = glyphsDic[j] + "%04d"%i + '.' + ext
             glyph.export(fullPath)
             if ext in ["bmp", "png"]:
                 image = Image.open(fullPath)
@@ -183,12 +219,24 @@ def saveAsJSON(fontDict, outDir):
     f.close()
     return 
 
-def saveAsTXT(fontDict, outDir, candidateChar = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"):
-    f = open(outDir + "train.txt", 'w')
+def saveAsTXT1(fontDict, outDir, candidateChar = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"):
+    f = open(outDir + "train1.txt", 'w')
     for i in candidateChar:
         for j in fontDict.keys():
             if i in fontDict[j][2]:
                 f.write(str(j))
+                f.write(";")
+                f.write(fontDict[j][2][i][0])
+                f.write("\n")
+    f.close()
+    return 
+
+def saveAsTXT2(fontDict, outDir, candidateChar = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"):
+    f = open(outDir + "train2.txt", 'w')
+    for i in candidateChar:
+        for j in fontDict.keys():
+            if i in fontDict[j][2]:
+                f.write(str(ord(i)))
                 f.write(";")
                 f.write(fontDict[j][2][i][0])
                 f.write("\n")
@@ -206,19 +254,21 @@ def main():
     parser.add_option("-t", "--filter", default="ANTIALIAS", dest="filter", type="string", 
         help="Filter type: NEAREST, BILINEAR, BICUBIC, ANTIALIAS")
     parser.add_option("-c", "--crop", default=False, dest="crop",  
-        help="Crop to the bounding box", action="store_true")
+        help="Crop to the glyph's bounding box", action="store_true")
     parser.add_option("-r", "--resize", default=False, dest="resize", 
         help="Scale all images to one size (the largest width and height of glyphs)", action="store_true")
     parser.add_option("-s", "--scale", default=False, dest="scale", 
         help="Scale the glyphs inside the images to fit within the image canvas", action="store_true")
     parser.add_option("-S", "--size", default=-1, dest="size", type="int", 
-        help="Force the use of specified square canvas (size*size). However, the provided size should be large enough to contain the glyphs (glyphs will not be scaled to fit the canvas)")
+        help="Force the use of specified square canvas (size*size). The glyphs will be scaled to fit the canvas)")
+    parser.add_option("-m", "--mode", default=1, dest="mode", 
+        type="int", help="Type of directory structure. 1: All font glyphs' in separate folder. 2: Every class letter in its own folder")
     parser.add_option("-v", "--verbose", default=0, dest="verbose", type="int", 
         help="Verbose mode: 0 (silent) or 1 (detailed)")
     (opt, args) = parser.parse_args()
     if opt.inDir == "" or opt.outDir =="":
-        print "Usage: ./ttf2png.py [-f png|bmp|eps|pdf|svg] [-t NEAREST|BILINEAR|BICUBIC|ANTIALIAS] [-S size] [-c] [-r] [-s] [-v] -d fontDir/ -o glyphsDir/"
-        print ""
+        print "Usage: ./ttf2png.py [-f png|bmp|eps|pdf|svg] [-t NEAREST|BILINEAR|BICUBIC|ANTIALIAS] [-S size] [-c] [-s] [-r] [-v] -d fontDir/ -o glyphsDir/"
+        print "PS:The precedence of c, s, r is as crop followed by scale and finally resize."
         return 
     
     if opt.inDir[len(opt.inDir)-1] != '/':
@@ -234,9 +284,6 @@ def main():
     opt.format = opt.format.lower()
     opt.filter = opt.filter.upper()
     
-    if opt.format in ['bmp', 'png'] and opt.resize and opt.crop and opt.scale:
-        print "Info: The three parameters -r -c -s options are all provided. The -s parameter will be ignored."
-        opt.scale = False
     if opt.format in ['eps', 'svg', 'pdf'] and (opt.resize or opt.crop or opt.scale):
         print "Info: Using vector format (%s), hence the three parameters -r -c -s will be ignored [if provided]."%opt.format
 
@@ -244,12 +291,16 @@ def main():
     if fontDict == {}:
         print "Error: the input font directory is empty"
         exit(3)
-    fontDict = createFontGlyphsFiles(fontDict, opt.outDir, opt.format, opt.verbose, opt.crop)
+    if opt.mode == 1:
+        fontDict = createFontGlyphsFiles1(fontDict, opt.outDir, opt.format, opt.verbose, opt.crop)
+    else:
+        fontDict = createFontGlyphsFiles2(fontDict, opt.outDir, opt.format, opt.verbose, opt.crop)
+        
     if opt.format in ['bmp', 'png', 'eps', 'svg', 'pdf']: 
         if opt.resize or opt.scale:
             if opt.size == -1:
                 maxv = getMaxDimOfAllGlyphs(fontDict)
-                maxval = max(maxv[0],maxv[1])
+                maxval = max(maxv[0], maxv[1])
                 if opt.verbose > 0:
                     print "Max width & height:", maxv
                     print "Images width & height will be set to %i*%i"%(maxval, maxval)
@@ -260,7 +311,11 @@ def main():
     else:
         print "Error: '%s' Unsupported file format."% opt.format
     saveAsJSON(fontDict, opt.outDir)
-    saveAsTXT(fontDict, opt.outDir)
+    if opt.mode == 1:
+        saveAsTXT1(fontDict, opt.outDir) # All font glyphs are saved in one folder
+    else:
+        saveAsTXT2(fontDict, opt.outDir) # Every character class has its own folder
+        
     print "End-of-Program: ttf2png.py"
     return 
     
