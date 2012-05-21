@@ -38,6 +38,7 @@ class Options:
         self.dpi           = 300       # resolution of the input data
         self.pdfFileName   = "out.pdf" # name of the resulting pdf file
         self.pdfOutputType = 1         # type of the PDF: 1 (image only), 2, 3 or 4 (fontreconstructed PDF)
+        self.bitdepth      = 0         # output image bit depth. The defalut value of '0' means to use the original color depth 
         self.verbose       = 0         # level of verbosity
         self.bookFileName  = ""        # filename of the input multipage tiff file
         self.width         = 21.0      # width of the generated PDF pages
@@ -140,11 +141,11 @@ class Options:
         return cmd
 
     def generatePDFCMD(self):
-        cmd = [self.pdfGenCMD, '-d', "%s" %(self.bookDir), '-t', "%s"%self.pdfOutputType, '-p', '%s'%self.pdfFileName, '-r', "%s"%self.dpi, '-v', '%s'%self.verbose, '-W', '%s'%self.width, '-H', '%s'%self.height]
+        cmd = [self.pdfGenCMD, '-d', "%s" %(self.bookDir), '-t', "%s"%self.pdfOutputType, '-p', '%s'%self.pdfFileName, '-r', "%s"%self.dpi, '-v', '%s'%self.verbose, '-W', '%s'%self.width, '-H', '%s'%self.height, '-B', '%s'%self.bitdepth]
         return cmd
         
 
-msg = '\nusage: python runPipeLine.py input file in pdf form \n\nworks iff "." only appears prior ext\nntake an input file and run ocropus clustering genPdf'
+msg = '\nusage: python runPipeLine.py input file in pdf form \n\nworks iff "." only appears prior ext\n\ntake an input file and run ocropus clustering genPdf'
 
 def main(sysargv):
 #    clustercommand = ["binned-inter"] # command called for token clustering
@@ -183,6 +184,8 @@ def main(sysargv):
         help="name of the multipage tiff input file OR folder with images inside. Folder name should have '/' as the last character.")
     parser.add_option("-f", "--font",  dest="fontFileName",  
         help="name of the TTF font to be used to create the PDF file")
+    parser.add_option("-B", "--bitdepth", default=0, dest="bitdepth",  
+        help="Color bit depth of the output file")
     # parse params and options
     (options, args) = parser.parse_args() 
     # set options in opt
@@ -196,6 +199,7 @@ def main(sysargv):
     opt.verbose = options.verbose
     opt.pdfFileName = options.pdfFileName
     opt.fontFileName = options.fontFileName
+    opt.bitdepth = options.bitdepth
     
     
     start = time.time()
@@ -316,6 +320,7 @@ def usage(progName):
           "   -C, --enforceCSEG  characters can only match if there CSEG labels are equal \n"\
           "   -e, --eps          matching threshold [default=7] \n"\
           "   -s, --reps         matching threshold [default=.07] \n"\
+          "   -B, --bit          Bit depth of the output image (1, 8, 24))"
 
 
 if __name__ == "__main__":

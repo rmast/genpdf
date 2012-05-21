@@ -41,10 +41,21 @@ import reportlab.rl_config # used for TTF support
 verbose     = 0         # output debugging information
 dpi         = 300       # resolution of the output images in the pdf
 
+def changeBitDepth(img, bitdepth):
+    imageBitDepth = img.mode
+    bitDepthMappingDict = {('0' ,'1'):'1', ('0' ,'L'):'L', ('0' ,'RGB'):'RGB',
+                           ('1' ,'1'):'1', ('1' ,'L'):'1', ('1' ,'RGB'):'1',
+                           ('8' ,'1'):'1', ('8' ,'L'):'L', ('8' ,'RGB'):'L',
+                           ('24','1'):'1', ('24','L'):'L', ('24','RGB'):'RGB' }
+    newMode =  bitDepthMappingDict[(bitdepth, imageBitDepth)]
+    if newMode == imageBitDepth:
+        return img
+    newImg = img.convert(newMode)
+    return newImg
 
 # ========= ImagePDF =========
 
-def convert2ImagePDF(bookDir,pdfFileName,b,pdf):
+def convert2ImagePDF(bookDir,pdfFileName, b, pdf, bitdepth):
     global verbose
     # aspect/ratio of the pdf page to be generated
     ar = float(b.pageSize[0])/float(b.pageSize[1])
@@ -53,6 +64,7 @@ def convert2ImagePDF(bookDir,pdfFileName,b,pdf):
         if(verbose>0):
             print("Processing page %d" %(b.pages[i].number))
         img = Image.open(b.pages[i].image)
+        img = changeBitDepth(img, bitdepth)
         # width and height of the document image in pixels
         W = float(img.size[0])
         H = float(img.size[1])
@@ -91,7 +103,7 @@ def convert2ImagePDF(bookDir,pdfFileName,b,pdf):
 
 # ========= Image with underlaid Text PDF =========
 
-def convert2ImageTextPDF(bookDir,pdfFileName,b,pdf):
+def convert2ImageTextPDF(bookDir,pdfFileName,b,pdf, bitdepth):
     global dpi
     # aspect/ratio of the pdf page to be generated
     ar = float(b.pageSize[0])/float(b.pageSize[1])
@@ -100,6 +112,7 @@ def convert2ImageTextPDF(bookDir,pdfFileName,b,pdf):
             print("Processing page %d" %(b.pages[i].number))
         # put image
         img = Image.open(b.pages[i].image)
+        img = changeBitDepth(img, bitdepth)
         # width and height of the document image in pixel
         W = float(img.size[0])
         H = float(img.size[1])
@@ -438,12 +451,13 @@ def main(sysargv):
     pdfFileName  = ""
     pageWidth  = 21.0; # default page width, DIN A4
     pageHeight = 29.7; # default page height, DIN A4
+    bitdepth = 0
     # parse command line options
     if len(sysargv) == 1:
         usage(sysargv[0])
         sys.exit(0)    
     try:
-        optlist, args = getopt.getopt(sysargv[1:], 'ht:d:p:W:H:v:r:', ['help','type=','dir=','pdf=','width=','height=','verbose=','resolution='])
+        optlist, args = getopt.getopt(sysargv[1:], 'ht:d:p:W:H:v:r:B:', ['help','type=','dir=','pdf=','width=','height=','verbose=','resolution=','bitdepth='])
         #print(optlist, args)
     except getopt.error, msg:
         print msg
@@ -468,6 +482,8 @@ def main(sysargv):
             verbose = int(a)
         if o in ("-r", "--resolution"):
             dpi = int(a)
+        if o in ("-B", "--bitdepth"):
+            bitdepth = a
 
     
     # read ocrodir book directory
@@ -486,17 +502,17 @@ def main(sysargv):
 
     # read data file    
     if(pdfOutputType == 1):
-        convert2ImagePDF(bookDir,pdfFileName,b,pdf)
+        convert2ImagePDF(bookDir,pdfFileName,b,pdf, bitdepth)
 
     if(pdfOutputType == 2):
-        convert2ImageTextPDF(bookDir,pdfFileName,b,pdf)
+        convert2ImageTextPDF(bookDir,pdfFileName,b,pdf, bitdepth)
 
     if(pdfOutputType == 3):
         if(b.checkTokenPresence() == 1):
             convert2TokenPDF(bookDir,pdfFileName,b,pdf)
         else:
             print("[Warn] No tokens found! Book structure is not tokenable. Switching to type 2 mode!")
-            convert2ImageTextPDF(bookDir,pdfFileName,b,pdf)
+            convert2ImageTextPDF(bookDir,pdfFileName,b,pdf, bitdepth)
     
     if(pdfOutputType == 4):
         if(b.checkFontPresence() == 1):
@@ -506,7 +522,7 @@ def main(sysargv):
             convert2TokenPDF(bookDir,pdfFileName,b,pdf)
         else:
             print("[Warn] No fonts found! Book structure is not fontable. Switching to type 2 mode!")
-            convert2ImageTextPDF(bookDir,pdfFileName,b,pdf) #Hasan: Added this line
+            convert2ImageTextPDF(bookDir,pdfFileName,b,pdf, bitdepth) #Hasan: Added this line
 
       
         # example code for generating a PDF with a Font
@@ -534,7 +550,7 @@ def usage(progName):
           "   -W, --width:       width of the PDF page [in cm] [default = 21.0]:\n"\
           "   -H, --height:      height of the PDF page [in cm] [default = 29.7]:\n"\
           "   -r, --resolution:  resolution of the images in the PDF [default = 200dpi]\n"\
-
+          "   -B, --bitdepth:    output image color bitdepth for PDF type 1 and 2. Valid values: 0 (default), 1, 8, 26. Upgrade is not permitted"
 
 if __name__ == "__main__":
     main(sys.argv)
