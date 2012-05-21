@@ -530,7 +530,7 @@ def usage(progName):
           "                          1: image only [default]\n"\
           "                          2: recognized text overlaid with image\n"\
           "                          3: tokenized\n"\
-          "                          4: fonted PDF"\
+          "                          4: fonted PDF\n"\
           "   -W, --width:       width of the PDF page [in cm] [default = 21.0]:\n"\
           "   -H, --height:      height of the PDF page [in cm] [default = 29.7]:\n"\
           "   -r, --resolution:  resolution of the images in the PDF [default = 200dpi]\n"\
