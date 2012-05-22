@@ -73,7 +73,7 @@ def genPDF4ImageList(fileList, opt):
         nameNoExt = stripExt(i)
         for j in list(str(opt.pdfType)): # generate PDF type j
             booksDirList.append([j, i, nameNoExt+"t" + j])
-            cmd = ["./decapod-genpdf.py", "-t", j, "-b", i, "-d", (nameNoExt+"t" + j + ""), "-p", (nameNoExt + "[t" + j + "]" + ".pdf"), '-r', "%s"%opt.dpi, "-v", "2"]
+            cmd = ["./decapod-genpdf.py", "-t", j, "-b", i, "-d", (nameNoExt+"t" + j + ""), "-p", (nameNoExt + "[t" + j + "]" + ".pdf"), '-r', "%s"%opt.dpi, "-v", "2", "-W", "%s"%opt.pageWidth, "-H", "%s"%opt.pageHeight, "-B", "%s"%opt.bitdepth]
             if opt.verbose == 1:
                 print "************** Now executing genpdf with image:", i, "\nCommand: ", cmd ," ************"
             begTime = time.time()
@@ -324,6 +324,13 @@ def main(sysargv):
         help="resolution (default 300dpi)")
     parser.add_option("-v", "--verbose", default=0, dest="verbose", type="int", 
         help="verbose type: 0 (silent) or 1 (detailed)")
+    parser.add_option("-W", "--width", default=21.0, dest="pageWidth",
+        type="float", help="page width of the generated PDF file (in [cm])")
+    parser.add_option("-H", "--height", default=29.7, dest="pageHeight",
+        type="float", help="page height of the generated PDF file (in [cm])")
+    parser.add_option("-B", "--bitdepth", default=0, dest="bitdepth",  
+        help="Color bit depth of the output file")
+    
     (opt, args) = parser.parse_args()
     
     if opt.srcDirectory == '':

@@ -334,6 +334,7 @@ def convert2FontPDF(bookDir,pdfFileName,b,pdf):
                 #pdf.setFont("Helvetica", b.pages[i].lines[j].fontHeight/dpi*72/factorScalePx) #Hasan: uncommented this line
                 
                 # draw character in correct position
+                WORD = b.pages[i].lines[j].words[k]
                 pdf.drawString(ccPos[0]*factor*cm, baseLine*factor*cm, b.pages[i].lines[j].words[k])        
         pdf.showPage() # finish PDF page
     pdf.save() # save PDF to file
@@ -451,7 +452,7 @@ def main(sysargv):
     pdfFileName  = ""
     pageWidth  = 21.0; # default page width, DIN A4
     pageHeight = 29.7; # default page height, DIN A4
-    bitdepth = 0
+    bitdepth = '0'
     # parse command line options
     if len(sysargv) == 1:
         usage(sysargv[0])
