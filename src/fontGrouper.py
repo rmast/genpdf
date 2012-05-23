@@ -269,7 +269,7 @@ def evaluateClusterCRIME3(fontList):
     for i in range(len(b.pages)):
         for j in range(len(b.pages[i].lines)):
             if(b.pages[i].lines[j].checkTokenable() == False): 
-                print "bad line"
+                print "[warn]: Untokenable line"
                 continue
             for t in range(len(b.pages[i].lines[j].tokenIDs)):
                 if b.pages[i].lines[j].tokenIDs[t] in fontList:
@@ -362,9 +362,13 @@ def linkExplore(allTokens):
 
 def specificCharSearch(letter,tokenID,fontList):
     '''only finds relation core for same char-class inputs'''
-    if letter == labels[tokenID]:
-        return findRelationScore(tokenID,fontList)
-    else: return 0 
+    if tokenID in labels.keys():
+        if letter == labels[tokenID]:
+            return findRelationScore(tokenID,fontList)
+        else: return 0
+    else:
+        if options.verbose >= 1:
+            print "Error: Accessing dictionary structure with invalid key. Reason: Data might be corrupted"
     
 
 def swapWeakLinks(fontList):
@@ -461,12 +465,15 @@ def explore(fontList,goalSet):
     for tID in fontList: 
         for x in b.tokens.keys():
             #print "inEXPORE",tID,x,labels[x]
-            if (labels[x] in goalSet) and (n[tID,x] > 0): #Hasan: There is a run-time error on this line with some images 
-                canidates[(tID,x)] = int(n[tID,x])
+            if x in labels.keys():
+                if (labels[x] in goalSet) and (n[tID,x] > 0): #Hasan
+                    canidates[(tID,x)] = int(n[tID,x])
+            else:
+                print "Error: Accessing dictionary structure with invalid key. Reason: Data might be corrupted."
     return canidates
 
 #the sparse function is to be called when the matrix data structure consumes too much memory
-def exploreSPARSE(fontList,goalSet):
+def exploreSPARSE(fontList, goalSet):
     ''' explore all nodes connected that are of the class that has not been found yet'''
     print "start: exploreSPARSE()"
     print "fontList=",fontList
@@ -483,7 +490,7 @@ def exploreSPARSE(fontList,goalSet):
                 print "explore token# = %i "%x
     return canidates
 
-def selectBest(canidates,goalSet,fontList,foundSet,allTokens):
+def selectBest(canidates, goalSet, fontList, foundSet, allTokens):
     '''heuristic used to select the best token from a set of candidates to become a part of the candidate reconstructed font'''
     for char in goalSet:
         currMax = 0
@@ -532,7 +539,7 @@ def fillOutSentenceMatrix():
     for i in range(len(b.pages)):
         for j in range(len(b.pages[i].lines)):
             if(b.pages[i].lines[j].checkTokenable() == False): 
-                print "bad line"
+                print "[warn]: Untokenable line"
                 continue
             if len(b.pages[i].lines[j].tokenIDs) != len(b.pages[i].lines[j].txt):
                 #print "not the same"
@@ -565,7 +572,7 @@ def fillOutWordMatrix():
     for i in range(len(b.pages)):
         for j in range(len(b.pages[i].lines)):
             if(b.pages[i].lines[j].checkTokenable() == False): 
-                print "[info] bad line (untokenable line)"
+                print "[warn]: Untokenable line"
                 continue
             spaceCount = 0
             inSameWordList = []
@@ -645,7 +652,7 @@ def outputFontIDfile(tokenList):
         pageDir = b.pages[i].pageDir
         for j in range(len(b.pages[i].lines)):
             if(b.pages[i].lines[j].checkTokenable() == False): 
-                print "bad line"
+                print "[warn]: Untokenable line"
                 continue
             #open file for writting
             lineName = b.pages[i].lines[j].tokenFile.split(".tokID.txt")[0]
@@ -681,7 +688,7 @@ def printOutTXT(FONT):
             continue
         for j in range(len(b.pages[i].lines)):
             if(b.pages[i].lines[j].checkTokenable() == False): 
-                print "bad line"
+                print "[warn]: Untokenable line"
                 continue
             for c in b.pages[i].lines[j].txt:
                 allTheTXT += c
