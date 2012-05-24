@@ -1229,9 +1229,12 @@ def findOrphans(tokenList,kmeansList,f):
                     minScore = score
                     minsCharClass = charClass
             if minsCharClass == 255: continue
-            if chr(minsCharClass) == labels[token.tokenID]: match+=1
-            else: 
-                notMatch+=1
+            if token.tokenID in labels.keys(): # Hasan added this 'if' statement
+                if chr(minsCharClass) == labels[token.tokenID]: match+=1
+                else: 
+                    notMatch+=1
+            else: #Hasan: Added this line
+                notMatch+=1 #Hasan: Added this line
                 #print chr(minsCharClass),"not equal to",labels[token.tokenID]
                 #if minScore == minScoreThresh: addToFont(tokenID,fontList)
     if options.verbose >= 1:

@@ -332,14 +332,17 @@ def convert2FontPDF(bookDir,pdfFileName,b,pdf):
                 textSizePt = b.pages[i].lines[j].fontHeight/dpi*72/factorScalePx
                 if math.isnan(textSizePt) or textSizePt < 1.0: # Hasan added this 'if': When the size of the text can not be determined, use 6pt (arbitrarily)
                     textSizePt = int(6)
-                pdf.setFont("%d" %(b.pages[i].lines[j].wordFont[k]), textSizePt)
+                wordFont = b.pages[i].lines[j].wordFont[k]
+                if math.isnan(wordFont):
+                    wordFont = 0
+                pdf.setFont("%d" %wordFont, textSizePt)
                 #print "[info] ocro2pdf::convert2FontPDF: computed font size = %d %f" %(b.pages[i].lines[j].fontHeight/dpi*72*factor,factor)
                 #pdf.setFont("Helvetica", b.pages[i].lines[j].fontHeight/dpi*72/factorScalePx) #Hasan: uncommented this line
                 
                 # draw character in correct position
                 if verbose > 1:
                     WORD = b.pages[i].lines[j].words[k]
-                    print "font%d, %dpt:"%(b.pages[i].lines[j].wordFont[k], textSizePt), WORD,ccPos[0]*factor*cm, baseLine*factor*cm, b.pages[i].lines[j].words[k]
+                    print "font%d, %dpt:"%(wordFont, textSizePt), WORD,ccPos[0]*factor*cm, baseLine*factor*cm, b.pages[i].lines[j].words[k]
                 if not math.isnan(ccPos[0]*factor*cm) and not math.isnan(baseLine*factor*cm):
                     pdf.drawString(ccPos[0]*factor*cm, baseLine*factor*cm, b.pages[i].lines[j].words[k])
             print ""        
