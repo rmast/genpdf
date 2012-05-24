@@ -298,12 +298,12 @@ class Line:
         self.image    = "" # original image file name
         self.ccs      = [] # connected components
         self.txtAll   = [] # text in text line
-        self.txt      = [] # position of the characters (removing spaces etc. from txt)
+        self.txt      = [] # text of the characters (removing spaces etc. from txt)
         self.tokenIDs = [] # token IDs in line
         self.tokenFile= "" # tokenID File
-        self.bboxFile = "" # list of connected component files
-        self.textFile = "" # list containing the line text
-        self.csegFile = "" # list containing the line text
+        self.bboxFile = "" # file name of connected component
+        self.textFile = "" # name of the file containing the line text
+        self.csegFile = "" # name of the file containing the line image
         self.fontIDs  = [] # font IDs for single characters
         self.fontFile = "" # font File containing information for each character in line what font to use
         self.shiftFile= "" # file containing the shift information for each text-line
@@ -339,7 +339,7 @@ class Line:
     def output(self):
         print("====================")
         print("    image      = %s" %(self.image))
-        print("    number     = %x" %(self.number))
+        print("    page number= %x" %(self.number))
         print("    text       = %s" %(self.txt))
         print("    num. bboxs = %d" %(len(self.ccs)))
         print("    num. tokIDs= %d" %(len(self.tokenIDs)))

@@ -322,20 +322,27 @@ def convert2FontPDF(bookDir,pdfFileName,b,pdf):
                b.pages[i].lines[j].checkFontable() == False): continue
 
             # compute the position of the baseline
-            baseLine = b.pages[i].linesPos[j][1]+b.pages[i].lines[j].baseLineY
+            baseLine = b.pages[i].linesPos[j][1] + b.pages[i].lines[j].baseLineY
             
             # for each word in text-line
             for k in range(len(b.pages[i].lines[j].words)): 
                 # compute position of character
                 ccPos = b.pages[i].linesPos[j] + b.pages[i].lines[j].wordPos[k]
                 # set font according to information in fontID file
-                pdf.setFont("%d" %(b.pages[i].lines[j].wordFont[k]), b.pages[i].lines[j].fontHeight/dpi*72/factorScalePx)
+                textSizePt = b.pages[i].lines[j].fontHeight/dpi*72/factorScalePx
+                if math.isnan(textSizePt) or textSizePt < 1.0: # Hasan added this 'if': When the size of the text can not be determined, use 6pt (arbitrarily)
+                    textSizePt = int(6)
+                pdf.setFont("%d" %(b.pages[i].lines[j].wordFont[k]), textSizePt)
                 #print "[info] ocro2pdf::convert2FontPDF: computed font size = %d %f" %(b.pages[i].lines[j].fontHeight/dpi*72*factor,factor)
                 #pdf.setFont("Helvetica", b.pages[i].lines[j].fontHeight/dpi*72/factorScalePx) #Hasan: uncommented this line
                 
                 # draw character in correct position
-                WORD = b.pages[i].lines[j].words[k]
-                pdf.drawString(ccPos[0]*factor*cm, baseLine*factor*cm, b.pages[i].lines[j].words[k])        
+                if verbose > 1:
+                    WORD = b.pages[i].lines[j].words[k]
+                    print "font%d, %dpt:"%(b.pages[i].lines[j].wordFont[k], textSizePt), WORD,ccPos[0]*factor*cm, baseLine*factor*cm, b.pages[i].lines[j].words[k]
+                
+                pdf.drawString(ccPos[0]*factor*cm, baseLine*factor*cm, b.pages[i].lines[j].words[k])
+            print ""        
         pdf.showPage() # finish PDF page
     pdf.save() # save PDF to file
    
