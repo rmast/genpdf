@@ -340,8 +340,8 @@ def convert2FontPDF(bookDir,pdfFileName,b,pdf):
                 if verbose > 1:
                     WORD = b.pages[i].lines[j].words[k]
                     print "font%d, %dpt:"%(b.pages[i].lines[j].wordFont[k], textSizePt), WORD,ccPos[0]*factor*cm, baseLine*factor*cm, b.pages[i].lines[j].words[k]
-                
-                pdf.drawString(ccPos[0]*factor*cm, baseLine*factor*cm, b.pages[i].lines[j].words[k])
+                if not math.isnan(ccPos[0]*factor*cm) and not math.isnan(baseLine*factor*cm):
+                    pdf.drawString(ccPos[0]*factor*cm, baseLine*factor*cm, b.pages[i].lines[j].words[k])
             print ""        
         pdf.showPage() # finish PDF page
     pdf.save() # save PDF to file
