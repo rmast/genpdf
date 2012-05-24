@@ -451,6 +451,22 @@ def convert2FontPDF(bookDir,pdfFileName,b,pdf):
     pdf.save() # save PDF to file
 """
 
+def saveTextTo(b):
+    name = b.bookDir + 'text.txt'
+    try: 
+        f = open(name,"w")
+        try:
+            for i in range(len(b.pages)):
+                for j in range(len(b.pages[i].lines)):
+                    str = "".join(b.pages[i].lines[j].txtAll)
+                    f.write(str)
+                f.write("*** page %d ***"%(i+1))
+        finally:
+            f.close()
+    except IOError:
+        print "[error]: Error writing OCR output to text file."
+        pass
+    return
 
 # read args, opts and process
 def main(sysargv):
@@ -534,7 +550,9 @@ def main(sysargv):
         else:
             print("[Warn] No fonts found! Book structure is not fontable. Switching to type 2 mode!")
             convert2ImageTextPDF(bookDir,pdfFileName,b,pdf, bitdepth) #Hasan: Added this line
-
+    
+    if pdfOutputType in [2,3,4]:
+            saveTextTo(b)
       
         # example code for generating a PDF with a Font
         #reportlab.rl_config.warnOnMissingFontGlyphs = 0
