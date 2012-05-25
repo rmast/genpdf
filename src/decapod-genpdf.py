@@ -31,6 +31,7 @@ import getopt
 import shlex, subprocess
 import glob
 from optparse import OptionParser # easier parsing of the cmd line parameters
+import json
 
 
 class Options:
@@ -147,6 +148,33 @@ class Options:
 
 msg = '\nusage: python runPipeLine.py input file in pdf form \n\nworks iff "." only appears prior ext\n\ntake an input file and run ocropus clustering genPdf'
 
+def initPipelineProgress(pdfFileName, pip):
+    nameTuple = os.path.splitext(pdfFileName)
+    progressFileName = nameTuple[0] + '.json'
+    pip['running'] = 'off'
+    pip['progressFileName'] = progressFileName
+    
+    pipJSON = json.dumps(pip)
+    f = open(progressFileName, 'w')
+    f.write(pipJSON + "\n")
+    f.close()
+    return
+
+def updatePipelineProgress(pathName, pip, stage, run):
+    if run == 'on':
+        pip['stage'] = stage
+        pip['running'] = 'on'
+    else:
+        pip['running'] = 'off'
+        if stage != '':
+            pip['stage'] = stage
+    pipJSON = json.dumps(pip)
+    path = pip['progressFileName']
+    f = open(pip['progressFileName'], 'w')
+    f.write(pipJSON + "\n")
+    f.close()
+    return 
+
 def main(sysargv):
 #    clustercommand = ["binned-inter"] # command called for token clustering
 #    pdfgencommand = ["ocro2pdf.py"]   # command called for PDF generation
@@ -158,7 +186,7 @@ def main(sysargv):
 #    dpi=300             # default resolution
 #    verbose=0           # default: be not verbose at all
     infoToken = "$@$ExportStatus$@$"
-    
+    pipelineProgress = {'stage':'', 'stages': ['books2pages', 'pages2lines', 'lines2fsts', 'fsts2text', 'binned-inter', 'fontGrouper.py', 'ocro2pdf.py', '*END*'], 'ignored':'', 'running':'off', 'progressFileName':''}
     # new option parsing
     parser = OptionParser()
     opt = Options()
@@ -207,8 +235,11 @@ def main(sysargv):
     opt.book2PagesCMD = opt.generateBook2PagesCMD(args)
     if (len(opt.book2PagesCMD) == 0):
         sys.exit(2)
+    initPipelineProgress(opt.pdfFileName, pipelineProgress)
+    updatePipelineProgress(opt.pdfFileName, pipelineProgress, 'book2pages', 'on')
     retCode = subprocess.call(opt.book2PagesCMD)
     if (retCode != 0):
+        updatePipelineProgress(opt.pdfFileName, pipelineProgress, '', 'off')
         print "[Error] generating book structure did not work as expected! (%s)" %(opt.book2PagesCMD)
         sys.exit(2) #unknown error
 
@@ -220,8 +251,10 @@ def main(sysargv):
  
     opt.psegCMD = opt.generatePSegCMD()
 #    if(opt.pdfOutputType > 0): #Hasan: commented
+    updatePipelineProgress(opt.pdfFileName, pipelineProgress, 'pages2lines', 'on')
     retCode = subprocess.call(opt.psegCMD)
     if (retCode != 0):
+        updatePipelineProgress(opt.pdfFileName, pipelineProgress, '', 'off')
         print "[Error] page segmentation did not work as expected! (%s)" %(opt.psegCMD)
         sys.exit(2) #unknown error
     
@@ -232,14 +265,18 @@ def main(sysargv):
             print "[Info]: time used by page segmentation: %d sec" %(endPSeg - endBin)
 
         opt.lineRec1CMD = opt.generateLineRec1CMD()
+        updatePipelineProgress(opt.pdfFileName, pipelineProgress, 'lines2fsts', 'on')
         retCode = subprocess.call(opt.lineRec1CMD)
         if (retCode != 0):
+            pdatePipelineProgress(opt.pdfFileName, pipelineProgress, '', 'off')
             print "[Error] line2fst recognition did not work as expected! (%s)" %(opt.lineRec1CMD)
             sys.exit(2) #unknown error
         
         opt.lineRec2CMD = opt.generateLineRec2CMD()
+        updatePipelineProgress(opt.pdfFileName, pipelineProgress, 'fsts2text', 'on')
         retCode = subprocess.call(opt.lineRec2CMD)
         if (retCode != 0):
+            updatePipelineProgress(opt.pdfFileName, pipelineProgress, '', 'off')
             print "[Error] fst2txt recognition did not work as expected! (%s)" %(opt.lineRec2CMD)
             sys.exit(2) #unknown error
 
@@ -259,8 +296,10 @@ def main(sysargv):
             print "[Info]: running clustering"
         #cmd = shlex.split(clustercommand)
         opt.clusterCMD = opt.generateClusterCMD()
+        updatePipelineProgress(opt.pdfFileName, pipelineProgress, 'binned-inter', 'on')
         retCode = subprocess.call(opt.clusterCMD)
         if (retCode != 0):
+            updatePipelineProgress(opt.pdfFileName, pipelineProgress, '', 'off')
             print "[Error]: clustering did not work as expected! (%s)" %(opt.clusterCMD)
         #os.system(clustercommand)
         print infoToken+"processComplete:clustering"
@@ -275,8 +314,10 @@ def main(sysargv):
             print "[Info]: running font generation"
         #cmd = shlex.split(clustercommand)
         opt.fontCMD = opt.generateFontCMD()
+        updatePipelineProgress(opt.pdfFileName, pipelineProgress, 'fontGrouper.py', 'on')
         retCode = subprocess.call(opt.fontCMD)
         if (retCode != 0):
+            updatePipelineProgress(opt.pdfFileName, pipelineProgress, '', 'off')
             print "[Error]: font generation did not work as expected! (%s)" %(opt.fontCMD)
         print infoToken+"processComplete:fontGen"
     endFont = time.time()
@@ -288,10 +329,13 @@ def main(sysargv):
         print "[Info]: generating pdf"
     
     opt.pdfGenCMD = opt.generatePDFCMD()
+    updatePipelineProgress(opt.pdfFileName, pipelineProgress, 'ocro2pdf.py', 'on')
     retCode = subprocess.call(opt.pdfGenCMD)
     if (retCode != 0):
+        updatePipelineProgress(opt.pdfFileName, pipelineProgress, '', 'off')
         print "[Error] PDF generation did not work as expected! (%s)" %(opt.pdfGenCMD)
         sys.exit(2)
+    updatePipelineProgress(opt.pdfFileName, pipelineProgress, '*END*', 'off')
     
     endGenPDF = time.time()
     print infoToken+"processComplete:genpdf"

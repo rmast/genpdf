@@ -43,8 +43,8 @@ dpi         = 300       # resolution of the output images in the pdf
 
 def changeBitDepth(img, bitdepth):
     imageBitDepth = img.mode
-    bitDepthMappingDict = {('0' ,'1'):'1', ('0' ,'L'):'L', ('0' ,'RGB'):'RGB',
-                           ('1' ,'1'):'1', ('1' ,'L'):'1', ('1' ,'RGB'):'1',
+    bitDepthMappingDict = {('0' ,'1'):'1', ('0' ,'L'):'L', ('0' ,'RGB'):'RGB',    # ('requested mode', 'current mode': 'final mode')
+                           ('1' ,'1'):'1', ('1' ,'L'):'1', ('1' ,'RGB'):'1',      # 0 = do'nt change mode, 1 = 1 bit mode, 8 = L mode, 24 = RGB mode
                            ('8' ,'1'):'1', ('8' ,'L'):'L', ('8' ,'RGB'):'L',
                            ('24','1'):'1', ('24','L'):'L', ('24','RGB'):'RGB' }
     newMode =  bitDepthMappingDict[(bitdepth, imageBitDepth)]
@@ -451,8 +451,10 @@ def convert2FontPDF(bookDir,pdfFileName,b,pdf):
     pdf.save() # save PDF to file
 """
 
-def saveTextTo(b):
-    name = b.bookDir + 'text.txt'
+def saveBookTextTo(b,pdfName):
+    nameTuple = os.path.splitext(pdfName) 
+    name = nameTuple[0] + '.txt'
+#    name = b.bookDir + 'bookText.txt'
     try: 
         f = open(name,"w")
         try:
@@ -460,7 +462,7 @@ def saveTextTo(b):
                 for j in range(len(b.pages[i].lines)):
                     str = "".join(b.pages[i].lines[j].txtAll)
                     f.write(str)
-                f.write("*** page %d ***"%(i+1))
+                f.write("\n*** page %d ***"%(i+1))
         finally:
             f.close()
     except IOError:
@@ -552,7 +554,7 @@ def main(sysargv):
             convert2ImageTextPDF(bookDir,pdfFileName,b,pdf, bitdepth) #Hasan: Added this line
     
     if pdfOutputType in [2,3,4]:
-            saveTextTo(b)
+            saveBookTextTo(b, pdfFileName)
       
         # example code for generating a PDF with a Font
         #reportlab.rl_config.warnOnMissingFontGlyphs = 0
