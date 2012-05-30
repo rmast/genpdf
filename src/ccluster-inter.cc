@@ -259,7 +259,7 @@
             }//if no book dir exit
 
             if( book_dir == NULL) {
-                printf("must set book_dir\n");
+                printf("Error: Must set book_dir/ through the -b option (Must supply the '/' at the end of folder name)\n");
                 exit(2);
             }
 

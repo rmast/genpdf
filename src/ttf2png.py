@@ -250,9 +250,9 @@ def main():
     parser.add_option("-o", "--output", default="", dest="outDir", type="string", 
         help="Directory name for the output files. The '/' will be added (if not there)")
     parser.add_option("-f", "--format", default="png", dest="format", type="string", 
-        help="Format type: PNG, BMP, EPS, PDF, SVG")
+        help="Format type: PNG (default), BMP, EPS, PDF, SVG")
     parser.add_option("-t", "--filter", default="ANTIALIAS", dest="filter", type="string", 
-        help="Filter type: NEAREST, BILINEAR, BICUBIC, ANTIALIAS")
+        help="Filter type: NEAREST, BILINEAR, BICUBIC, ANTIALIAS (default)")
     parser.add_option("-c", "--crop", default=False, dest="crop",  
         help="Crop to the glyph's bounding box", action="store_true")
     parser.add_option("-r", "--resize", default=False, dest="resize", 
@@ -262,13 +262,13 @@ def main():
     parser.add_option("-S", "--size", default=-1, dest="size", type="int", 
         help="Force the use of specified square canvas (size*size). The glyphs will be scaled to fit the canvas)")
     parser.add_option("-m", "--mode", default=1, dest="mode", 
-        type="int", help="Type of directory structure. 1: All font glyphs' in separate folder. 2: Every class letter in its own folder")
+        type="int", help="Type of directory structure. 1: All font glyphs' in separate folder (default). 2: Every class letter in its own folder")
     parser.add_option("-v", "--verbose", default=0, dest="verbose", type="int", 
         help="Verbose mode: 0 (silent) or 1 (detailed)")
     (opt, args) = parser.parse_args()
     if opt.inDir == "" or opt.outDir =="":
         print "Usage: ./ttf2png.py [-f png|bmp|eps|pdf|svg] [-t NEAREST|BILINEAR|BICUBIC|ANTIALIAS] [-S size] [-c] [-s] [-r] [-v] -d fontDir/ -o glyphsDir/"
-        print "PS:The precedence of c, s, r is as crop followed by scale and finally resize."
+        print "PS:The precedence of c, s, r is: crop followed by scale and finally resize."
         return 
     
     if opt.inDir[len(opt.inDir)-1] != '/':

@@ -53,8 +53,8 @@ class Options:
         self.lineRec1CMD   = ["ocropus","lines2fsts"] #  cmd line tool for line recognition
         self.lineRec2CMD   = ["ocropus","fsts2text"] #
         self.clusterCMD    = "binned-inter" # cmd line tool for clustering
-        self.fontCMD       = "./fontGrouper.py" # cmd line tool for font generation
-        self.pdfGenCMD     = "./ocro2pdf.py"  # cmd line tool for PDF generation
+        self.fontCMD       = "fontGrouper.py" # cmd line tool for font generation
+        self.pdfGenCMD     = "ocro2pdf.py"  # cmd line tool for PDF generation
         
     def createImageList(self, dir):
         imageFormats = [".jpg", ".tif", ".tiff", ".png", ".bmp"] #FIXME: add more image file types supported by Ocropus
@@ -268,7 +268,7 @@ def main(sysargv):
         updatePipelineProgress(opt.pdfFileName, pipelineProgress, 'lines2fsts', 'on')
         retCode = subprocess.call(opt.lineRec1CMD)
         if (retCode != 0):
-            pdatePipelineProgress(opt.pdfFileName, pipelineProgress, '', 'off')
+            updatePipelineProgress(opt.pdfFileName, pipelineProgress, '', 'off')
             print "[Error] line2fst recognition did not work as expected! (%s)" %(opt.lineRec1CMD)
             sys.exit(2) #unknown error
         
