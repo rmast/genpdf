@@ -342,10 +342,11 @@ def convert2FontPDF(bookDir,pdfFileName,b,pdf):
                 # draw character in correct position
                 if verbose > 1:
                     WORD = b.pages[i].lines[j].words[k]
-                    print "font%d, %dpt:"%(wordFont, textSizePt), WORD,ccPos[0]*factor*cm, baseLine*factor*cm, b.pages[i].lines[j].words[k]
+                    print "font#=%d, size=%dpt:"%(wordFont, textSizePt), WORD,ccPos[0]*factor*cm, baseLine*factor*cm, b.pages[i].lines[j].words[k]
                 if not math.isnan(ccPos[0]*factor*cm) and not math.isnan(baseLine*factor*cm):
                     pdf.drawString(ccPos[0]*factor*cm, baseLine*factor*cm, b.pages[i].lines[j].words[k])
-            print ""        
+            if verbose > 1:
+                print ""        
         pdf.showPage() # finish PDF page
     pdf.save() # save PDF to file
    
@@ -462,7 +463,7 @@ def saveBookTextTo(b,pdfName):
                 for j in range(len(b.pages[i].lines)):
                     str = "".join(b.pages[i].lines[j].txtAll)
                     f.write(str)
-                f.write("\n*** page %d ***"%(i+1))
+                f.write("\n*** page %d ***\n"%(i+1))
         finally:
             f.close()
     except IOError:

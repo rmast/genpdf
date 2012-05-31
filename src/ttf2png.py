@@ -214,7 +214,7 @@ def saveAsJSON(fontDict, outDir):
     for i in fontDict.keys():
         dic[i] = fontDict[i][0]
     str1 = json.dumps(dic)
-    f = open(outDir + "ttf2png.txt", 'w')
+    f = open(outDir + "train.json", 'w')
     f.write(str1 + '\n')
     f.close()
     return 
