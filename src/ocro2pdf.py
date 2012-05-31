@@ -319,7 +319,7 @@ def convert2FontPDF(bookDir,pdfFileName,b,pdf):
             # check if text-line is fontable and if not ignore it
 #            if(b.pages[i].lines[j].checkTokenable() == False or
 #               b.pages[i].lines[j].checkTextable() == False or
-               if (b.pages[i].lines[j].checkFontable() == False): continue
+            if (b.pages[i].lines[j].checkFontable() == False): continue
 
             # compute the position of the baseline
             baseLine = b.pages[i].linesPos[j][1] + b.pages[i].lines[j].baseLineY
