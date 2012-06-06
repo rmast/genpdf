@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# (C) 2010, 2011 University of Kaiserslautern 
+# (C) 2010, 2011, 2012 University of Kaiserslautern 
 # 
 # You may not use this file except under the terms of the accompanying license.
 # 
@@ -21,7 +21,7 @@
 # Creator: Mickael Cutter (cutter@iupr.com), Joost van Beusekom (joost@iupr.org)
 # Reviewer: Hasan S. M. Al-Khaffaf (hasan@iupr.com)
 # Primary Repository: 
-# Web Sites: www.iupr.com, www.dfki.de
+# Web Sites: www.iupr.com
 
 
 import os
@@ -37,7 +37,7 @@ import json
 class Options:
     def __init__(self):
         self.dpi           = 300       # resolution of the input data
-        self.pdfFileName   = "out.pdf" # name of the resulting pdf file
+        self.pdfFileName   = "./out.pdf" # name of the resulting pdf file
         self.pdfOutputType = 1         # type of the PDF: 1 (image only), 2, 3 or 4 (fontreconstructed PDF)
         self.bitdepth      = 0         # output image bit depth. The defalut value of '0' means to use the original color depth 
         self.verbose       = 0         # level of verbosity
@@ -225,7 +225,8 @@ def main(sysargv):
         opt.bookDir = options.bookDir +'/' # Hasan: FIXME: Convert this code to check whether bookDir is a directory
     opt.pdfOutputType = int(options.pdfOutputType)
     opt.verbose = options.verbose
-    opt.pdfFileName = options.pdfFileName
+    if options.pdfFileName != None:
+        opt.pdfFileName = options.pdfFileName
     opt.fontFileName = options.fontFileName
     opt.bitdepth = options.bitdepth
     

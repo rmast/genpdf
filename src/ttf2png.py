@@ -18,7 +18,7 @@
 # File: ttf2png.py
 # Purpose: Create a database of glyphs from TTF file. The glyphs belongs to one font will be stored in a folder name f0000\, f0001\, etc and 
 #            the files in the form a.png, b.png, etc
-# Responsible: Hasan S. M. Al-Khaffaf (hasan@iupr.com)
+# Creator: Hasan S. M. Al-Khaffaf (hasan@iupr.com)
 # Reviewer: 
 # Primary Repository: 
 # Web Sites: www.iupr.com
@@ -38,7 +38,7 @@ def loadFont(fontName):
         return None
 
 def createFontList(dir):
-    imageFormats = [".ttf", "pfb"] #FIXME: add more font file types supported by FontForge
+    imageFormats = [".ttf", ".pfb"] #FIXME: add more font file types supported by FontForge
     listFiltered = []
     list1 = glob.glob(dir + "*.*") 
     list1.sort()
@@ -267,7 +267,7 @@ def main():
         help="Verbose mode: 0 (silent) or 1 (detailed)")
     (opt, args) = parser.parse_args()
     if opt.inDir == "" or opt.outDir =="":
-        print "Usage: ./ttf2png.py [-f png|bmp|eps|pdf|svg] [-t NEAREST|BILINEAR|BICUBIC|ANTIALIAS] [-S size] [-c] [-s] [-r] [-v] -d fontDir/ -o glyphsDir/"
+        print "Usage: ./ttf2png.py [-f png|bmp|eps|pdf|svg] [-t NEAREST|BILINEAR|BICUBIC|ANTIALIAS] [-S size] [-c] [-s] [-r] [-v] -d fontsDir/ -o glyphsDir/"
         print "PS:The precedence of c, s, r is: crop followed by scale and finally resize."
         return 
     

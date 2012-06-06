@@ -17,7 +17,7 @@
 # Section: genpdf module 
 # File: fontRecPer.py
 # Purpose: Extract glyph info from reconstructed TTF file and compute performance matrices between the original and the reconstructed font.
-# Responsible: Hasan S. M. Al-Khaffaf (hasan@iupr.com)
+# Creator: Hasan S. M. Al-Khaffaf (hasan@iupr.com)
 # Reviewer: 
 # Primary Repository: 
 # Web Sites: www.iupr.com

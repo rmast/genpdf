@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# (C) 2011 University of Kaiserslautern 
+# (C) 2011, 2012 University of Kaiserslautern 
 # 
 # You may not use this file except under the terms of the accompanying license.
 # 
@@ -17,7 +17,7 @@
 # Section: genpdf module 
 # File: img2pdfper
 # Purpose: run the genpdf on a set of test images
-# Responsible: Hasan S. M. Al-Khaffaf (hasan@iupr.com)
+# Creator: Hasan S. M. Al-Khaffaf (hasan@iupr.com)
 # Reviewer: 
 # Primary Repository: 
 # Web Sites: www.iupr.com

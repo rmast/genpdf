@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# (C) 2010 University of Kaiserslautern 
+# (C) 2010, 2011, 2012 University of Kaiserslautern 
 # 
 # You may not use this file except under the terms of the accompanying license.
 # 
@@ -19,9 +19,9 @@
 # File: ocro2pdf
 # Purpose: Convert OCROpus directory to PDF file
 # Responsible: Joost van Beusekom (joost@iupr.org)
-# Reviewer: 
+# Reviewer: Hasan S. M. Al-Khaffaf
 # Primary Repository: 
-# Web Sites: www.iupr.com, www.dfki.de
+# Web Sites: www.iupr.com
 
 import os, glob, string, sys, time, getopt, commands, math, numpy, datetime, platform, tempfile
 from ocrodir import *
