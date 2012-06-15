@@ -30,12 +30,34 @@ from optparse import OptionParser
 from PIL import Image
 import json
 
+#import numpy
+#import scipy
+#from scipy import ndimage
+
+
 def loadFont(fontName):
     if os.path.isfile(fontName):
         return fontforge.open(fontName)
     else:
         print "[fatal Error]: The file '%s' does not exist or is not a file"% fontName
         return None
+
+
+def findCountour(imageName):
+    im = Image.open(imageName)
+    im_contour = im.copy()
+#    print (0,0, im.getpixel((0,0)))
+    for jj in range(im.size[1]-2):
+        for ii in range(im.size[0]-2):
+            i = ii+1
+            j = jj+1 
+            if (im.getpixel((i,j))<=127) and (im.getpixel((i-1,j-1))>127 or im.getpixel((i-1,j))>127 or im.getpixel((i-1,j+1))>127 or im.getpixel((i,j-1))>127 or im.getpixel((i,j+1))>127 or im.getpixel((i+1,j-1))>127 or im.getpixel((i+1,j))>127 or im.getpixel((i+1,j+1))>127):
+                im_contour.putpixel((i,j), 0)
+            else:
+                im_contour.putpixel((i,j), 255)
+    im_contour.save(imageName)
+    return im_contour
+
 
 def createFontList(dir):
     imageFormats = [".ttf", ".pfb"] #FIXME: add more font file types supported by FontForge
@@ -182,6 +204,7 @@ def resizeAllGlyphstoMax(fontDict, maxv, scale, filterStr):
             image2.paste(image, pos)
             fontDict[i][2][j][1] = image2
             fontDict[i][2][j][1].save(fontDict[i][2][j][0])
+            findCountour(fontDict[i][2][j][0])
     return
 
 def findBBox(image):

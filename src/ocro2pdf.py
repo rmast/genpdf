@@ -553,10 +553,10 @@ def main(sysargv):
         else:
             print("[Warn] No fonts found! Book structure is not fontable. Switching to type 2 mode!")
             convert2ImageTextPDF(bookDir,pdfFileName,b,pdf, bitdepth) #Hasan: Added this line
-    
+#    t1= time.time()
     if pdfOutputType in [2,3,4]:
             saveBookTextTo(b, pdfFileName)
-      
+#    print "%d"%(t1 - time.time() )
         # example code for generating a PDF with a Font
         #reportlab.rl_config.warnOnMissingFontGlyphs = 0
         #pdfmetrics.registerFont(TTFont("TEST","TEST.ttf"));

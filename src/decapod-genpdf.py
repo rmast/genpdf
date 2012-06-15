@@ -38,7 +38,7 @@ class Options:
     def __init__(self):
         self.dpi           = 300       # resolution of the input data
         self.pdfFileName   = "./out.pdf" # name of the resulting pdf file
-        self.pdfOutputType = 1         # type of the PDF: 1 (image only), 2, 3 or 4 (fontreconstructed PDF)
+        self.pdfOutputType = 1         # type of the PDF: 1 (image only), 2, 3 or 4 (font reconstructed PDF)
         self.bitdepth      = 0         # output image bit depth. The defalut value of '0' means to use the original color depth 
         self.verbose       = 0         # level of verbosity
         self.bookFileName  = ""        # filename of the input multipage tiff file
