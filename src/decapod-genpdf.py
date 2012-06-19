@@ -186,6 +186,10 @@ def main(sysargv):
 #    dpi=300             # default resolution
 #    verbose=0           # default: be not verbose at all
     infoToken = "$@$ExportStatus$@$"
+    pipelineProgressGen = {1:{'stage':'', 'stages': ['books2pages', 'ocro2pdf.py', '*END*'], 'ignored':'', 'running':'off', 'progressFileName':''},
+                           2:{'stage':'', 'stages': ['books2pages', 'pages2lines', 'lines2fsts', 'fsts2text', 'ocro2pdf.py', '*END*'], 'ignored':'', 'running':'off', 'progressFileName':''},
+                           3:{'stage':'', 'stages': ['books2pages', 'pages2lines', 'lines2fsts', 'fsts2text', 'binned-inter', 'ocro2pdf.py', '*END*'], 'ignored':'', 'running':'off', 'progressFileName':''},
+                           4:{'stage':'', 'stages': ['books2pages', 'pages2lines', 'lines2fsts', 'fsts2text', 'binned-inter', 'fontGrouper.py', 'ocro2pdf.py', '*END*'], 'ignored':'', 'running':'off', 'progressFileName':''}}
     pipelineProgress = {'stage':'', 'stages': ['books2pages', 'pages2lines', 'lines2fsts', 'fsts2text', 'binned-inter', 'fontGrouper.py', 'ocro2pdf.py', '*END*'], 'ignored':'', 'running':'off', 'progressFileName':''}
     # new option parsing
     parser = OptionParser()
@@ -229,7 +233,11 @@ def main(sysargv):
         opt.pdfFileName = options.pdfFileName
     opt.fontFileName = options.fontFileName
     opt.bitdepth = options.bitdepth
-    
+    if opt.pdfOutputType in pipelineProgressGen.keys():
+        pipelineProgress = pipelineProgressGen[opt.pdfOutputType]
+    else:
+        print "[warn]: Invalid PDF type. Switching to PDF type 1"
+        opt.pdfOutputType = 1
     
     start = time.time()
 
