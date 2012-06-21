@@ -43,15 +43,16 @@ def loadFont(fontName):
         return None
 
 
-def findCountour(imageName):
+def findContour(imageName):
     im = Image.open(imageName)
     im_contour = im.copy()
+    imLoad = im.load()
 #    print (0,0, im.getpixel((0,0)))
-    for jj in range(im.size[1]-2):
+    for jj in range(im.size[1]-2): # Hasan: FIXME: contour pixels at image boundary is not handled well.
         for ii in range(im.size[0]-2):
             i = ii+1
             j = jj+1 
-            if (im.getpixel((i,j))<=127) and (im.getpixel((i-1,j-1))>127 or im.getpixel((i-1,j))>127 or im.getpixel((i-1,j+1))>127 or im.getpixel((i,j-1))>127 or im.getpixel((i,j+1))>127 or im.getpixel((i+1,j-1))>127 or im.getpixel((i+1,j))>127 or im.getpixel((i+1,j+1))>127):
+            if (imLoad[i,j]<=127) and (imLoad[i-1,j-1]>127 or imLoad[i-1,j]>127 or imLoad[i-1,j+1]>127 or imLoad[i,j-1]>127 or imLoad[i,j+1]>127 or imLoad[i+1,j-1]>127 or imLoad[i+1,j]>127 or imLoad[i+1,j+1]>127):
                 im_contour.putpixel((i,j), 0)
             else:
                 im_contour.putpixel((i,j), 255)
@@ -180,7 +181,7 @@ def maxSize(image, maxSize, method = 3):
         #set to maxHeight*imAspect x maxHeight
         return image.resize((int((float(maxSize[1])*imAspect) + 0.5), maxSize[1]), method)
     
-def resizeAllGlyphstoMax(fontDict, maxv, scale, filterStr):
+def resizeAllGlyphstoMax(fontDict, maxv, scale, filterStr, contourFlag):
     if filterStr == 'NEAREST':
         filterr = Image.NEAREST
     elif filterStr == 'BILINEAR':
@@ -204,7 +205,8 @@ def resizeAllGlyphstoMax(fontDict, maxv, scale, filterStr):
             image2.paste(image, pos)
             fontDict[i][2][j][1] = image2
             fontDict[i][2][j][1].save(fontDict[i][2][j][0])
-            findCountour(fontDict[i][2][j][0])
+            if contourFlag:
+                findContour(fontDict[i][2][j][0])
     return
 
 def findBBox(image):
@@ -286,6 +288,8 @@ def main():
         help="Force the use of specified square canvas (size*size). The glyphs will be scaled to fit the canvas)")
     parser.add_option("-m", "--mode", default=1, dest="mode", 
         type="int", help="Type of directory structure. 1: All font glyphs' in separate folder (default). 2: Every class letter in its own folder")
+    parser.add_option("-u", "--contour", default=False, dest="contour", 
+        help="Apply morphological filter to keep only glyph contours (boundaries)", action="store_true")
     parser.add_option("-v", "--verbose", default=0, dest="verbose", type="int", 
         help="Verbose mode: 0 (silent) or 1 (detailed)")
     (opt, args) = parser.parse_args()
@@ -330,7 +334,7 @@ def main():
                 maxv = [maxval, maxval]
             else:
                 maxv = [opt.size, opt.size]
-            resizeAllGlyphstoMax(fontDict, maxv, opt.scale, opt.filter)
+            resizeAllGlyphstoMax(fontDict, maxv, opt.scale, opt.filter, opt.contour)
     else:
         print "Error: '%s' Unsupported file format."% opt.format
     saveAsJSON(fontDict, opt.outDir)

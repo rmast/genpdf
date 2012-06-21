@@ -195,29 +195,29 @@ def main(sysargv):
     parser = OptionParser()
     opt = Options()
     parser.add_option("-t", "--type", default=1, dest="pdfOutputType",  
-        help="type of the PDF to be generates:\n"\
+        help="Type of the PDF to be generates:\n"\
              "  1: image only [default]\n"\
              "  2: recognized text overlaid with image\n"\
              "  3: tokenized\n"\
              "  4: font reconstructed PDF\n")
     parser.add_option("-W", "--width", default=21.0, dest="pageWidth",
-        type="float", help="page width of the generated PDF file (in [cm])")
+        type="float", help="Page width of the generated PDF file (in [cm])")
     parser.add_option("-H", "--height", default=29.7, dest="pageHeight",
-        type="float", help="page height of the generated PDF file (in [cm])")
+        type="float", help="Page height of the generated PDF file (in [cm])")
     parser.add_option("-d", "--dir",  default="NewBook", dest="bookDir",  #Hasan added 'default="NewBook"'
         help="OCRopus Book directory structure that will be generated")
     parser.add_option("-p", "--pdf",  dest="pdfFileName",  
-        help="name of the resulting PDF file")
+        help="Name of the resulting PDF file")
     parser.add_option("-v", "--verbose", default=0, dest="verbose",  
-        type="int", help="verbosity")
+        type="int", help="Verbosity")
     parser.add_option("-r", "--resolution", default=300, dest="dpi", 
         type="int", help="Resolution of the input images (in [dpi])")
     parser.add_option("-b", "--book", default="", dest="bookFileName",  #Hasan
-        help="name of the multipage tiff input file OR folder with images inside. Folder name should have '/' as the last character.")
+        help="Name of the multipage tiff input file OR folder with images inside. Folder name should have '/' as the last character.")
     parser.add_option("-f", "--font",  dest="fontFileName",  
-        help="name of the TTF font to be used to create the PDF file")
+        help="Name of the TTF font to be used to create the PDF file")
     parser.add_option("-B", "--bitdepth", default=0, dest="bitdepth",  
-        help="Color bit depth of the output file")
+        help="Color bit depth of the output file (1, 8, or 24)")
     # parse params and options
     (options, args) = parser.parse_args() 
     # set options in opt

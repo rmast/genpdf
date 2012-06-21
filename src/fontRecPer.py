@@ -418,10 +418,10 @@ def getPerformance(oGlyphImageDict, b, opt):
             else:
 #                for i in oGlyphImageDictKeys:
 #                    size = oGlyphImageDict[i].size
-                accMSE +=  llen * w * (Achar) * (Evalue) # NumCharperLine * (0.25*sizeOfLetter_a) * (255-0)*(255-0)
+                accMSE +=  Llen * w * (Achar) * (Evalue) # NumCharperLine * (0.25*sizeOfLetter_a) * (255-0)*(255-0)
         if i != 0 and i != len(b.pages)-1: # adding penalty to all missing lines of pages except 1st and last page
             if len(b.pages[i].lines) < LinperPage:
-                accMSE += abs(LinperPage - len(b.pages[i].lines)) * llen * w * (Achar) * (Evalue)
+                accMSE += abs(LinperPage - len(b.pages[i].lines)) * Llen * w * (Achar) * (Evalue)
     
     print("***************")
     print("accMSE=%i"%(accMSE)) 
@@ -476,7 +476,7 @@ def main():
         help="verbose type: 0 (silent) or 1 (detailed)")
     (opt, args) = parser.parse_args()
     if opt.book == "" or opt.ofont =="" or opt.rfont=="":
-        print "Usage: ./fontAnalysis.py -d bookDir/ -o font_name.ttf [-r font_name.ttf]"
+        print "Usage: ./fontRecPer.py -d bookDir/ -o font_name.ttf [-r font_name.ttf]"
         print "       if -r option is ommited, the bookDir/ is assumed to hold the book info of the reconstructed font in raster format"
         return 
     
@@ -520,7 +520,7 @@ def main():
             performance = getPerformanceT4(performanceIndexDict, book, opt)
         else:
             performance = getPerformance(oGlyphImageDict, book, opt)
-    print"End-of-Program: fontAnalysis.py"
+    print"End-of-Program: fontRecper.py"
     return performance
     
 if __name__ == "__main__":
