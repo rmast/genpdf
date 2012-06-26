@@ -390,11 +390,12 @@ def getPerformance(oGlyphImageDict, b, opt):
     psnr = 0.0
     accMSE = 0.0
     mse = 0.0
-    Llen = 0
+    
+    Llen = 58
     w = 0
-    Achar = 0
-    Evalue = 0
-    LinperPage = 48
+    Achar = 47*54
+    Evalue = 64*64
+    LinperPage = 40
     oGlyphImageDictKeys = oGlyphImageDict.keys()
 #    print b.tokens
     for i in range(len(b.pages)):

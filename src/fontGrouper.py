@@ -483,11 +483,14 @@ def exploreSPARSE(fontList, goalSet):
             #print "inEXPORE",tID,x,labels[x],n[tID,x]
             #sys.exit(2)
             count = int(n[tID].count(x))
-            if (labels[x] in goalSet) and (count > 0):
-                #print "adding", labels[x]
-                canidates[(tID,x)] = count
-            if options.verbose >= 2:
-                print "explore token# = %i "%x
+            if x in labels.keys(): # Hasan
+                if (labels[x] in goalSet) and (count > 0):
+                    #print "adding", labels[x]
+                    canidates[(tID,x)] = count
+                if options.verbose >= 2:
+                    print "explore token# = %i "%x
+            else:
+                print "Error: Accessing dictionary structure with invalid key. Reason: Data might be corrupted."
     return canidates
 
 def selectBest(canidates, goalSet, fontList, foundSet, allTokens):
