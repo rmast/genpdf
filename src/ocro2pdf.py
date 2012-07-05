@@ -35,7 +35,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from cStringIO import StringIO # "cStringIO" is faster, but if you need to subclass, use "StringIO" 
 import reportlab.rl_config # used for TTF support
-
+import json
 
 # global variables:
 verbose     = 0         # output debugging information
@@ -272,17 +272,28 @@ def convert2TokenPDF(bookDir,pdfFileName,b,pdf):
 
 
 # ========= Generate PDF with integrated font =========
-def convert2FontPDF(bookDir,pdfFileName,b,pdf):
+def convert2FontPDF(bookDir,pdfFileName,b,pdf,fontlist):
     # this code is copied from /decapod.genpdf/src
     global dpi
     
     # ignore warning of missing glyphs
     reportlab.rl_config.warnOnMissingFontGlyphs = 1
     # register all fonts
-    for i in range(len(b.fonts)):
-        print b.fonts[i]
-        pdfmetrics.registerFont(TTFont("%d" %(i),b.fonts[i]));
-
+    if fontlist == "":
+        for i in range(len(b.fonts)):
+            print b.fonts[i]
+            pdfmetrics.registerFont(TTFont("%d" %(i), b.fonts[i]));
+    else: # if 'fontlist' file is available then use the original fonts
+        f = open(fontlist,"r")
+        line = f.readline()
+        dict = json.loads(line)
+#        dict = dict.JSONDecoder()
+        for k in dict.keys():
+            try:
+                pdfmetrics.registerFont(TTFont("%d" %(int(k)), dict[k]))
+            except:
+                print "Error: unknown error"
+                #pdfmetrics.registerFont(TTFont("%d" %(int(k)),"/home/hasan/Desktop/oFonts/Ubuntu-L.ttf")) # Hasan: FIXME: replace this line !!!
     
     # aspect/ratio of the pdf page to be generated
     ar = float(b.pageSize[0])/float(b.pageSize[1])
@@ -482,12 +493,13 @@ def main(sysargv):
     pageWidth  = 21.0; # default page width, DIN A4
     pageHeight = 29.7; # default page height, DIN A4
     bitdepth = '0'
+    fontlist = ""
     # parse command line options
     if len(sysargv) == 1:
         usage(sysargv[0])
         sys.exit(0)    
     try:
-        optlist, args = getopt.getopt(sysargv[1:], 'ht:d:p:W:H:v:r:B:', ['help','type=','dir=','pdf=','width=','height=','verbose=','resolution=','bitdepth='])
+        optlist, args = getopt.getopt(sysargv[1:], 'ht:d:p:W:H:v:r:B:j:', ['help','type=','dir=','pdf=','width=','height=','verbose=','resolution=','bitdepth=', 'fontlist='])
         #print(optlist, args)
     except getopt.error, msg:
         print msg
@@ -514,6 +526,9 @@ def main(sysargv):
             dpi = int(a)
         if o in ("-B", "--bitdepth"):
             bitdepth = a
+        if o in ("-j","--fontlist"):
+            fontlist = a
+            
 
     
     # read ocrodir book directory
@@ -546,7 +561,7 @@ def main(sysargv):
     
     if(pdfOutputType == 4):
         if(b.checkFontPresence() == 1):
-            convert2FontPDF(bookDir,pdfFileName,b,pdf)
+            convert2FontPDF(bookDir,pdfFileName,b,pdf,fontlist)
         elif(b.checkTokenPresence() == 1):
             print("[Warn] No fonts found! Book structure is not fontable. Switching to type 3 mode!")
             convert2TokenPDF(bookDir,pdfFileName,b,pdf)
@@ -556,6 +571,9 @@ def main(sysargv):
 #    t1= time.time()
     if pdfOutputType in [2,3,4]:
             saveBookTextTo(b, pdfFileName)
+
+    print "End-of-Program: ocro2pdf.py"
+
 #    print "%d"%(t1 - time.time() )
         # example code for generating a PDF with a Font
         #reportlab.rl_config.warnOnMissingFontGlyphs = 0
