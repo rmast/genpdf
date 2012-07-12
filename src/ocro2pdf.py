@@ -285,7 +285,7 @@ def convert2FontPDF(bookDir,pdfFileName,b,pdf,fontlist):
             pdfmetrics.registerFont(TTFont("%d" %(i), b.fonts[i]));
     else: # if 'fontlist' file is available then use the original fonts
         f = open(fontlist,"r")
-        line = f.readline()
+        line = f.readline() # Hasan: FIXME: This code might fail if the json file is quite large. This argument needs validation.
         dict = json.loads(line)
 #        dict = dict.JSONDecoder()
         for k in dict.keys():
@@ -293,7 +293,7 @@ def convert2FontPDF(bookDir,pdfFileName,b,pdf,fontlist):
                 pdfmetrics.registerFont(TTFont("%d" %(int(k)), dict[k]))
             except:
                 print "Error: unknown error"
-                #pdfmetrics.registerFont(TTFont("%d" %(int(k)),"/home/hasan/Desktop/oFonts/Ubuntu-L.ttf")) # Hasan: FIXME: replace this line !!!
+                #pdfmetrics.registerFont(TTFont("%d" %(int(k)),"/home/hasan/Desktop/oFonts/Ubuntu-L.ttf")) # Hasan: FIXME: replace/remove this line !!!
     
     # aspect/ratio of the pdf page to be generated
     ar = float(b.pageSize[0])/float(b.pageSize[1])
@@ -499,7 +499,7 @@ def main(sysargv):
         usage(sysargv[0])
         sys.exit(0)    
     try:
-        optlist, args = getopt.getopt(sysargv[1:], 'ht:d:p:W:H:v:r:B:j:', ['help','type=','dir=','pdf=','width=','height=','verbose=','resolution=','bitdepth=', 'fontlist='])
+        optlist, args = getopt.getopt(sysargv[1:], 'ht:d:p:W:H:v:r:B:f:', ['help','type=','dir=','pdf=','width=','height=','verbose=','resolution=','bitdepth=', 'fontlist='])
         #print(optlist, args)
     except getopt.error, msg:
         print msg
@@ -526,7 +526,7 @@ def main(sysargv):
             dpi = int(a)
         if o in ("-B", "--bitdepth"):
             bitdepth = a
-        if o in ("-j","--fontlist"):
+        if o in ("-f","--fontlist"):
             fontlist = a
             
 
@@ -560,15 +560,15 @@ def main(sysargv):
             convert2ImageTextPDF(bookDir,pdfFileName,b,pdf, bitdepth)
     
     if(pdfOutputType == 4):
-        if(b.checkFontPresence() == 1):
+#        if(b.checkFontPresence() == 1):
             convert2FontPDF(bookDir,pdfFileName,b,pdf,fontlist)
-        elif(b.checkTokenPresence() == 1):
-            print("[Warn] No fonts found! Book structure is not fontable. Switching to type 3 mode!")
-            convert2TokenPDF(bookDir,pdfFileName,b,pdf)
-        else:
-            print("[Warn] No fonts found! Book structure is not fontable. Switching to type 2 mode!")
-            convert2ImageTextPDF(bookDir,pdfFileName,b,pdf, bitdepth) #Hasan: Added this line
-#    t1= time.time()
+#        elif(b.checkTokenPresence() == 1):
+#            print("[Warn] No fonts found! Book structure is not fontable. Switching to type 3 mode!")
+#            convert2TokenPDF(bookDir,pdfFileName,b,pdf)
+#        else:
+#            print("[Warn] No fonts found! Book structure is not fontable. Switching to type 2 mode!")
+#            convert2ImageTextPDF(bookDir,pdfFileName,b,pdf, bitdepth) #Hasan: Added this line
+##    t1= time.time()
     if pdfOutputType in [2,3,4]:
             saveBookTextTo(b, pdfFileName)
 

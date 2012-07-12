@@ -917,7 +917,7 @@ def makeLessSupervisedFont(fontList,i):
     FONT=fontforge.font()
     fontforge.setPrefs("PreferPotrace", 1) # Hasan: added this line: Setting Potrace as the prefered boundray tracer
 #    fontforge.setPrefs("AutotraceAsk", "-O 100 -t 1 -u 30 -a 0.0 -x 0.5 -z POTRACE_TURNPOLICY_BLACK") # Hasan: added this line: Setting the parameters of the tracing library
-    fontforge.setPrefs("AutotraceAsk", "-O 0.5 -u 1 -t 1") # Hasan: added this line: Setting the parameters of the tracing library
+    fontforge.setPrefs("AutotraceAsk", "-O 0.001 -u 1 -t 1") # Hasan: added this line: Setting the parameters of the tracing library
     print "Potrace param were set...."
     #open known font
     font = fontforge.open("DejaVuSans.sfd") 
