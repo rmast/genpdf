@@ -920,7 +920,7 @@ def makeLessSupervisedFont(fontList,i):
     fontforge.setPrefs("AutotraceAsk", "-O 0.001 -u 1 -t 1") # Hasan: added this line: Setting the parameters of the tracing library
     print "Potrace param were set...."
     #open known font
-    font = fontforge.open("DejaVuSans.sfd") 
+    font = fontforge.open("/usr/local/bin/DejaVuSans.sfd") #FIXME: change the absolute path to something systematic
     #the information from the module font is used in the following way:
     #to compute baseline percentage 
     #font is a known font that is used to model baseline proportion for characters of same class
