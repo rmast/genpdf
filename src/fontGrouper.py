@@ -24,6 +24,13 @@
 # Primary Repository: 
 # Web Site: www.iupr.com
 
+
+
+from builtins import chr
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from ocrodir import *
 from numpy import *
 #from numpy.numarray import *
@@ -42,7 +49,7 @@ from datetime import datetime
 from inspect import currentframe #Hasan: Added this line
 import subprocess
 
-class CandidateFont():
+class CandidateFont(object):
     '''class to hold tokenSet that has been grouped into a CandidateFont'''
     
     def __init__(self,tokenSet,candidateFontID):
@@ -82,7 +89,7 @@ class CandidateFont():
     
     
 
-class Token():
+class Token(object):
     '''class to hold information about each token'''
     def __init__(self,coordsN=None,foundPageN=None,foundLineN=None,tokenIDN=None):
         '''creates first entry of a token found in document'''
@@ -120,8 +127,8 @@ class Token():
         for x0,y0,x1,y1 in self.coords:
             cumH += (y1 - y0)
             cumW += (x1 - x0)
-        self.averageH = cumH / len(self.coords)
-        self.averageW = cumW / len(self.coords)
+        self.averageH = old_div(cumH, len(self.coords))
+        self.averageW = old_div(cumW, len(self.coords))
     def fontClassScoreUpdate(self,update):
         self.fontClassScore += update
         if sum(self.fontClassScore) <= 0: return #no assigned font class without representation
@@ -159,11 +166,11 @@ def eucl(a,b):
     return sqrt(sum((a-b)**2))
 
 def normalize (a):
-    return a/norm(a)
+    return old_div(a,norm(a))
 
 
 
-class KmeansClassifier:
+class KmeansClassifier(object):
     '''used to classify unfonted tokens, currently only used as NN classifier'''
     def __init__(self):
         self.vs = []
@@ -236,7 +243,7 @@ def logMsg(f, msg):
   '''outputs message to file (f) and to stdout.'''
   ts = "[%s] " % (datetime.now().strftime("%Y/%m/%d %I:%M%p"),)
   out = ts + str(msg)
-  print >> f, (out)
+  print((out), file=f)
   if options.verbose >=1: print (out)
 
   # flush file output buffer immediately
@@ -269,7 +276,7 @@ def evaluateClusterCRIME3(fontList):
     for i in range(len(b.pages)):
         for j in range(len(b.pages[i].lines)):
             if(b.pages[i].lines[j].checkTokenable() == False): 
-                print "[warn]: Untokenable line"
+                print("[warn]: Untokenable line")
                 continue
             for t in range(len(b.pages[i].lines[j].tokenIDs)):
                 if b.pages[i].lines[j].tokenIDs[t] in fontList:
@@ -280,9 +287,9 @@ def evaluateClusterCRIME3(fontList):
                         fontTwo+=1
                     elif(i >= 6):
                         fontThree+=1
-    print "fontone",fontOne,"percent",fontOne/float(0.000000001+fontOne+fontTwo+fontThree)
-    print "fontTwo",fontTwo,"percent",fontTwo/float(0.000000001+fontOne+fontTwo+fontThree)
-    print "fontThree",fontThree,"percent",fontThree/float(0.000000001+fontOne+fontTwo+fontThree)
+    print("fontone",fontOne,"percent",fontOne/float(0.000000001+fontOne+fontTwo+fontThree))
+    print("fontTwo",fontTwo,"percent",fontTwo/float(0.000000001+fontOne+fontTwo+fontThree))
+    print("fontThree",fontThree,"percent",fontThree/float(0.000000001+fontOne+fontTwo+fontThree))
 
     
 def evaluateCRIME3_assignedREP(tokenList,f):
@@ -337,7 +344,7 @@ def linkExplore(allTokens):
     lastFoundSet = set()
     while( not goalSet.issuperset(foundSet) ):
         if options.verbose >= 1: 
-            print "epoc= %i"%epoc
+            print("epoc= %i"%epoc)
         if epoc == 0:
             if options.sparse:
                 canidates = exploreSPARSE(fontList,goalSet.difference(foundSet))
@@ -362,13 +369,13 @@ def linkExplore(allTokens):
 
 def specificCharSearch(letter,tokenID,fontList):
     '''only finds relation core for same char-class inputs'''
-    if tokenID in labels.keys():
+    if tokenID in list(labels.keys()):
         if letter == labels[tokenID]:
             return findRelationScore(tokenID,fontList)
         else: return 0
     else:
         if options.verbose >= 1:
-            print "Error: Accessing dictionary structure with invalid key. Reason: Data might be corrupted"
+            print("Error: Accessing dictionary structure with invalid key. Reason: Data might be corrupted")
     
 
 def swapWeakLinks(fontList):
@@ -379,7 +386,7 @@ def swapWeakLinks(fontList):
     fontList =  numpy.random.permutation(fontList)
     for tokenID in fontList:
         if findRelationScore(tokenID,fontList) < minThresh:
-            bestMatch = argmax([specificCharSearch(labels[tokenID],x,fontList) for x in b.tokens.keys()])
+            bestMatch = argmax([specificCharSearch(labels[tokenID],x,fontList) for x in list(b.tokens.keys())])
             newFontList.append(bestMatch)
             #print "swapping a weaklink"
         else: newFontList.append(tokenID)
@@ -390,7 +397,7 @@ def swapWeakLinks(fontList):
 def secondDepth(canidates,foundSet):
     '''explore canidates for possible 2nd depth matches'''
     secondDepthList = []
-    for Tid,x in canidates.keys():
+    for Tid,x in list(canidates.keys()):
         if labels[x] not in foundSet:
             #print labels[x],x,labels[Tid],Tid
             secondDepthList.append(x)
@@ -463,34 +470,34 @@ def explore(fontList,goalSet):
     ''' explore all nodes connected that are of the class that has not been found yet'''
     canidates = {}
     for tID in fontList: 
-        for x in b.tokens.keys():
+        for x in list(b.tokens.keys()):
             #print "inEXPORE",tID,x,labels[x]
-            if x in labels.keys():
+            if x in list(labels.keys()):
                 if (labels[x] in goalSet) and (n[tID,x] > 0): #Hasan
                     canidates[(tID,x)] = int(n[tID,x])
             else:
-                print "Error: Accessing dictionary structure with invalid key. Reason: Data might be corrupted."
+                print("Error: Accessing dictionary structure with invalid key. Reason: Data might be corrupted.")
     return canidates
 
 #the sparse function is to be called when the matrix data structure consumes too much memory
 def exploreSPARSE(fontList, goalSet):
     ''' explore all nodes connected that are of the class that has not been found yet'''
-    print "start: exploreSPARSE()"
-    print "fontList=",fontList
+    print("start: exploreSPARSE()")
+    print("fontList=",fontList)
     canidates = {}
     for tID in fontList: 
-        for x in b.tokens.keys():
+        for x in list(b.tokens.keys()):
             #print "inEXPORE",tID,x,labels[x],n[tID,x]
             #sys.exit(2)
             count = int(n[tID].count(x))
-            if x in labels.keys(): # Hasan
+            if x in list(labels.keys()): # Hasan
                 if (labels[x] in goalSet) and (count > 0):
                     #print "adding", labels[x]
                     canidates[(tID,x)] = count
                 if options.verbose >= 2:
-                    print "explore token# = %i "%x
+                    print("explore token# = %i "%x)
             else:
-                print "Error: Accessing dictionary structure with invalid key. Reason: Data might be corrupted."
+                print("Error: Accessing dictionary structure with invalid key. Reason: Data might be corrupted.")
     return canidates
 
 def selectBest(canidates, goalSet, fontList, foundSet, allTokens):
@@ -501,7 +508,7 @@ def selectBest(canidates, goalSet, fontList, foundSet, allTokens):
         maxIDs = -1
         foundFlag = False
         #print char
-        for Tid,x in canidates.keys():
+        for Tid,x in list(canidates.keys()):
             #print labels[Tid],char
             if labels[x] == char and x not in fontList and labels[x] not in foundSet and findRelationScore(x,fontList) > currMax and x not in masterFontList:
                 #if allTokens[x].count < currMaxCount: continue
@@ -523,7 +530,7 @@ def purgeSpace(line):
     '''removes spaces from line of text'''
     returnLine = []
     for c in line:
-        if c==unicode(' ') or c ==unicode('\n'):
+        if c==str(' ') or c ==str('\n'):
             continue
         returnLine.append(c)
     return returnLine
@@ -532,7 +539,7 @@ def purgeNewLine(line):
     '''removes newline chars from a line of text'''
     returnLine = []
     for c in line:
-        if c ==unicode('\n') or ord(c) == 10:
+        if c ==str('\n') or ord(c) == 10:
             continue
         returnLine.append(c)
     return returnLine
@@ -542,7 +549,7 @@ def fillOutSentenceMatrix():
     for i in range(len(b.pages)):
         for j in range(len(b.pages[i].lines)):
             if(b.pages[i].lines[j].checkTokenable() == False): 
-                print "[warn]: Untokenable line"
+                print("[warn]: Untokenable line")
                 continue
             if len(b.pages[i].lines[j].tokenIDs) != len(b.pages[i].lines[j].txt):
                 #print "not the same"
@@ -570,12 +577,12 @@ def addToArray(inSameWordList):
 def fillOutWordMatrix():
     '''creates a token co-occurence graph based word level co-occurance'''
     if options.sparse: #if sparse is selected then add adjacent edges
-        for t in b.tokens.keys():
+        for t in list(b.tokens.keys()):
             n[t] = []
     for i in range(len(b.pages)):
         for j in range(len(b.pages[i].lines)):
             if(b.pages[i].lines[j].checkTokenable() == False): 
-                print "[warn]: Untokenable line"
+                print("[warn]: Untokenable line")
                 continue
             spaceCount = 0
             inSameWordList = []
@@ -585,7 +592,7 @@ def fillOutWordMatrix():
                 c = b.pages[i].lines[j].txt[k]
                 #print c
                 
-                if c.isspace() or ord(c) == 10 or unicode('\n') == c:
+                if c.isspace() or ord(c) == 10 or str('\n') == c:
                     #print "in term",c,"isspace",ord(c)
                     spaceCount+=1
                     addToArray(inSameWordList)
@@ -612,7 +619,7 @@ def readInTokenCounts(fn):
     global tokenCounts
     tokenCountsH = {}
     if os.path.exists(fn) == False:
-        print "Warning: file could not be opened: ",fn
+        print("Warning: file could not be opened: ",fn)
         return []
     f    = file(fn, "r")
     data = [line.strip().split("\t") for line in f]
@@ -620,21 +627,21 @@ def readInTokenCounts(fn):
         tID,count = d
         tokenCountsH[tID] = int(count)
 
-    items = [(v, k) for k, v in tokenCountsH.items()]
+    items = [(v, k) for k, v in list(tokenCountsH.items())]
     items.sort()
     items.reverse()             # so largest is first
     tokenCounts = [(int(k), int(v)) for v, k in items]
 
 def displayTokenCounts(fn):
     '''print function for tokenCounts'''
-    print tokenCounts[0]
-    print tokenCounts[len(tokenCounts)-1]
+    print(tokenCounts[0])
+    print(tokenCounts[len(tokenCounts)-1])
     tokenNames = [(int(k)) for v, k in tokenCounts]
     tokenVal = [(int(v)) for v, k in tokenCounts]
-    print tokenNames[0]
-    print tokenVal[0]
-    print len(tokenNames)
-    print sum(tokenNames[:100]),"all",(sum(tokenNames))
+    print(tokenNames[0])
+    print(tokenVal[0])
+    print(len(tokenNames))
+    print(sum(tokenNames[:100]),"all",(sum(tokenNames)))
     #plt.plot(tokenNames[:168])
     #plt.xlabel("token ID")
     #plt.ylabel("token density")
@@ -655,7 +662,7 @@ def outputFontIDfile(tokenList):
         pageDir = b.pages[i].pageDir
         for j in range(len(b.pages[i].lines)):
             if(b.pages[i].lines[j].checkTokenable() == False): 
-                print "[warn]: Untokenable line"
+                print("[warn]: Untokenable line")
                 continue
             #open file for writting
             lineName = b.pages[i].lines[j].tokenFile.split(".tokID.txt")[0]
@@ -691,25 +698,25 @@ def printOutTXT(FONT):
             continue
         for j in range(len(b.pages[i].lines)):
             if(b.pages[i].lines[j].checkTokenable() == False): 
-                print "[warn]: Untokenable line"
+                print("[warn]: Untokenable line")
                 continue
             for c in b.pages[i].lines[j].txt:
                 allTheTXT += c
             allTheTXT+="\n"
     fontforge.printSetup("pdf-file","test.pdf") 
     #FONT.printSample(  "fontsample" ,12,"l","test.pdf")
-    print allTheTXT
+    print(allTheTXT)
     #FONT.printSample(  "fontdisplay" ,24,allTheTXT,"fontdisplay.pdf"+str(FONT.fontname))
     FONT.printSample(  "fontsample" ,9,allTheTXT,str(FONT.fontname+"test.pdf"))
     FONT.printSample(  "fontsample" ,24,"hello worldp","forPaper"+str(FONT.fontname))
-    print FONT.fontname
+    print(FONT.fontname)
     #sys.exit(0)
 
 def visualizeFontLocation(tokenList,i):
     '''debug function to see distribution of font locations'''
     for t in tokenList:
         if t.fontClass == i:
-            print "token of font:",i,"found on page:",t.foundPage,"line:",t.foundLine
+            print("token of font:",i,"found on page:",t.foundPage,"line:",t.foundLine)
 
 def fillAllTokens():
     '''fills allTokens hash by parsing OCRopus extended book structure'''
@@ -736,8 +743,8 @@ def fillAllTokens():
                 else:
                     allTokens[tokenID].addOccurrence(coords,i,j)
     tokenCountsH = {}
-    for t in allTokens.values(): tokenCountsH[t.tokenID] = t.count
-    items = [(v, k) for k, v in tokenCountsH.items()]
+    for t in list(allTokens.values()): tokenCountsH[t.tokenID] = t.count
+    items = [(v, k) for k, v in list(tokenCountsH.items())]
     items.sort()
     items.reverse()             # so largest is first
     tokenCounts = [(int(k), int(v)) for v, k in items]
@@ -837,7 +844,7 @@ def makeFont(fontList,i):
     font = fontforge.open("DejaVuSans.sfd") #the module font
     
     for Tid in fontList:
-        print labels[Tid]
+        print(labels[Tid])
         try:
             c = FONT.createChar(ord(labels[Tid]))      #generate a new char #int represents unicode position
             tempImageFileName = padWithPil(b.tokens[Tid])		
@@ -903,8 +910,8 @@ def makeFont(fontList,i):
     #printOutTXT(FONT)
     FONT.ascent = font.ascent
     FONT.descent = font.descent
-    print "font",font.hasvmetrics,"dsf",font.xHeight,font.uwidth,font.ascent,font.descent
-    print "FONT",FONT.hasvmetrics,"dsf",FONT.xHeight,FONT.uwidth,FONT.ascent,FONT.descent
+    print("font",font.hasvmetrics,"dsf",font.xHeight,font.uwidth,font.ascent,font.descent)
+    print("FONT",FONT.hasvmetrics,"dsf",FONT.xHeight,FONT.uwidth,FONT.ascent,FONT.descent)
     
     FONT.fontname=options.bookDir                 #Give the new font a name
     FONT.save(options.fontName+str(i)+".sfd") 
@@ -918,7 +925,7 @@ def makeLessSupervisedFont(fontList,i):
     fontforge.setPrefs("PreferPotrace", 1) # Hasan: added this line: Setting Potrace as the prefered boundray tracer
 #    fontforge.setPrefs("AutotraceAsk", "-O 100 -t 1 -u 30 -a 0.0 -x 0.5 -z POTRACE_TURNPOLICY_BLACK") # Hasan: added this line: Setting the parameters of the tracing library
     fontforge.setPrefs("AutotraceAsk", "-O 0.001 -u 1 -t 1") # Hasan: added this line: Setting the parameters of the tracing library
-    print "Potrace param were set...."
+    print("Potrace param were set....")
     #open known font
     font = fontforge.open("/usr/local/bin/DejaVuSans.sfd") #FIXME: change the absolute path to something systematic
     #the information from the module font is used in the following way:
@@ -928,7 +935,7 @@ def makeLessSupervisedFont(fontList,i):
     avgYscaleList = []
     minYlist = []
     for Tid in fontList:
-        if options.verbose >=2: print "making a font for character class",labels[Tid]
+        if options.verbose >=2: print("making a font for character class",labels[Tid])
         try:
             c = FONT.createChar(ord(labels[Tid]))      #generate a new char #int represents unicode position
 #            if (labels[Tid] == 'A' or labels[Tid] == 'a'): #Hasan: 'if' Added for debug purpose
@@ -942,7 +949,7 @@ def makeLessSupervisedFont(fontList,i):
                 ysize *= 2
                 ttt = ttt.resize((xsize,ysize),Image.BICUBIC)
                 ttt.save("xyz"+tempImageFileName)
-                print "tempImageFileName=%s"% "xyz"+tempImageFileName     
+                print("tempImageFileName=%s"% "xyz"+tempImageFileName)     
                 c.importOutlines("xyz"+tempImageFileName)         #load outline
             #on 64bit ubuntu 'c.autotrace()' does not work as expected...
 #            c.importOutlines(tempImageFileName)         #load outline
@@ -970,14 +977,14 @@ def makeLessSupervisedFont(fontList,i):
             fW = xmaxR - xminR
             cH = allTokens[Tid].averageH 
             cW = allTokens[Tid].averageW
-            if options.verbose >= 2: print "font",fH,fW,"char",cH,cW
+            if options.verbose >= 2: print("font",fH,fW,"char",cH,cW)
             if (fW == 0 or fH == 0): # Hasan: added this 'if' statement
-                print "Error: division by zero in makeLessSupervisedFont(), function call at line %i\n Possibly invalid bounding box info\n Pleae make sure autotrace and potrace libraries are installed"% currentframe().f_back.f_lineno
-                raise(-1)
+                print("Error: division by zero in makeLessSupervisedFont(), function call at line %i\n Possibly invalid bounding box info\n Pleae make sure autotrace and potrace libraries are installed"% currentframe().f_back.f_lineno)
+                raise Exception(-1)
             avgXscaleList.append(cW/float(fW))
             avgYscaleList.append(fH/float(fH))
             scaler = psMat.scale(cW/float(fW),cH/float(fH))
-            if options.verbose >= 2: print "scaler:",scaler
+            if options.verbose >= 2: print("scaler:",scaler)
             c.transform(scaler)            
             
             xminR,yminR, xmaxR,ymaxR = c.boundingBox()
@@ -991,12 +998,12 @@ def makeLessSupervisedFont(fontList,i):
 #            yminR /= 2
 #            xmaxR /= 2
 #            ymaxR /= 2
-            if options.verbose >=3: print c.boundingBox()
+            if options.verbose >=3: print(c.boundingBox())
             xminK,yminK, xmaxK,ymaxK = font[ord(labels[Tid])].boundingBox()
-            baselineProp = yminK / (ymaxK-yminK)
-            if options.verbose >=3: print baselineProp
+            baselineProp = old_div(yminK, (ymaxK-yminK))
+            if options.verbose >=3: print(baselineProp)
             yscaleAmount = baselineProp * ymaxR
-            if options.verbose >=3: print yscaleAmount
+            if options.verbose >=3: print(yscaleAmount)
             translatemax = psMat.translate(0,yscaleAmount)
             c.transform(translatemax) #makes the size relative to cseg bbox
             #next xscale translate to pad the image
@@ -1006,7 +1013,7 @@ def makeLessSupervisedFont(fontList,i):
 #            xmaxR /= 2
 #            ymaxR /= 2
             xlength = xmaxR - xminR
-            guessXpad = xlength/7
+            guessXpad = old_div(xlength,7)
             translatemax = psMat.translate(guessXpad,0)
             c.transform(translatemax)
 
@@ -1055,13 +1062,13 @@ def makeLessSupervisedFont(fontList,i):
             
             minYlist.append(yminR)
             if options.verbose >= 2:
-                print "backDelta",allTokens[Tid].avgBackDelta(),"forwardDelta",allTokens[Tid].avgForwardDelta()
+                print("backDelta",allTokens[Tid].avgBackDelta(),"forwardDelta",allTokens[Tid].avgForwardDelta())
                 #c.vwidth = font[str(labels[Tid])].vwidth
-                print  "c.right_side_bearing",c.right_side_bearing
-                print "font[str(labels[Tid])].right_side_bearing",font[str(labels[Tid])].right_side_bearing
+                print("c.right_side_bearing",c.right_side_bearing)
+                print("font[str(labels[Tid])].right_side_bearing",font[str(labels[Tid])].right_side_bearing)
                 #c.right_side_bearing = font[str(labels[Tid])].right_side_bearing
-                print "c.left_side_bearing",c.left_side_bearing
-                print " font[str(labels[Tid])].left_side_bearing", font[str(labels[Tid])].left_side_bearing
+                print("c.left_side_bearing",c.left_side_bearing)
+                print(" font[str(labels[Tid])].left_side_bearing", font[str(labels[Tid])].left_side_bearing)
           # c.left_side_bearing = font[str(labels[Tid])].left_side_bearing
             
             #JUST A TRY DELETEME
@@ -1080,11 +1087,11 @@ def makeLessSupervisedFont(fontList,i):
     #c.autoInstr()  #Generates TrueType instructisons for all selected glyphs
     #c.autoHint()   #Generates PostScript hints for all selected glyphs.
     #xminR,yminR,xmaxR,ymaxR = font["p"].boundingBox()
-    FONT.ascent = FONT.capHeight+(FONT.xHeight/10)
-    if options.verbose >=2: print FONT.descent
+    FONT.ascent = FONT.capHeight+(old_div(FONT.xHeight,10))
+    if options.verbose >=2: print(FONT.descent)
     FONT.descent = int(.45 *  FONT.capHeight) #FONT.descent = int(min(minYlist)+(-.1)*FONT.xHeight) #causes fontforge to crash int(yminR+(1/6)*yminR)
     #print "font",font.hasvmetrics,"dsf",font.xHeight,font.uwidth,font.ascent,font.descent
-    if options.verbose >=2: print "FONT",FONT.hasvmetrics,FONT.xHeight,FONT.uwidth,FONT.ascent,FONT.descent,FONT.upos,"capheight",FONT.capHeight,"xheight",FONT.xHeight
+    if options.verbose >=2: print("FONT",FONT.hasvmetrics,FONT.xHeight,FONT.uwidth,FONT.ascent,FONT.descent,FONT.upos,"capheight",FONT.capHeight,"xheight",FONT.xHeight)
     #font.selection.select(("ranges",None)," "," ")
     avgXscale = (sum(avgXscaleList)/float(len(avgXscaleList)))
     avgYscale = (sum(avgYscaleList)/float(len(avgYscaleList)))
@@ -1112,21 +1119,21 @@ def makeLessSupervisedFont(fontList,i):
     #next yscale translate
     xminR,yminR,xmaxR,ymaxR = FONT[46].boundingBox()
     xminK,yminK, xmaxK,ymaxK = font[46].boundingBox()
-    baselineProp = yminK / (ymaxK-yminK)
+    baselineProp = old_div(yminK, (ymaxK-yminK))
     yscaleAmount = baselineProp * ymaxR
     translatemax = psMat.translate(0,yscaleAmount)
     FONT[46].transform(translatemax)
     #next xscale translate to pad the image
     xminR,yminR,xmaxR,ymaxR = FONT[46].boundingBox()
     xlength = xmaxR - xminR
-    guessXpad = xlength/6
+    guessXpad = old_div(xlength,6)
     translatemax = psMat.translate(guessXpad,0)
     FONT[46].transform(translatemax)
     #set borders to match template
-    FONT[46].width = xlength + xlength/3
+    FONT[46].width = xlength + old_div(xlength,3)
     
     FONT.fontname=options.fontName +str( ("%.2d" % (i)) )  #Give the new font a name
-    if options.verbose >= 2: print options.bookDir+"/fonts/"+options.fontName+str( ("%.2d" % (i)) )+".sfd"
+    if options.verbose >= 2: print(options.bookDir+"/fonts/"+options.fontName+str( ("%.2d" % (i)) )+".sfd")
 
     if not os.path.exists(options.bookDir+"/fonts"):
         os.makedirs(options.bookDir+"/fonts")
@@ -1150,8 +1157,8 @@ def resize_character(ichar,nr=32,nc=32,borg=0,ifilter=Image.BICUBIC):
     dr = nr - r
     dc = nc - c 
     if dr>=0 and dc >=0:
-        dr = ceil(dr/2)
-        dc = ceil(dc/2)
+        dr = ceil(old_div(dr,2))
+        dc = ceil(old_div(dc,2))
         richar[dr:dr+r,dc:dc+c] = ichar*255
     else:
 #        print 'c=', c # Hasan: added this line
@@ -1164,10 +1171,10 @@ def resize_character(ichar,nr=32,nc=32,borg=0,ifilter=Image.BICUBIC):
         ichar.shape = r,c
         if r>=c:
             nnr = nr
-            nnc = c*nnr/r	
+            nnc = old_div(c*nnr,r)	
         else:
             nnc = nc
-            nnr = r*nnc/c
+            nnr = old_div(r*nnc,c)
         nnr = ceil(nnr)
         nnc = ceil(nnc)
         nnc = int(nnc) # Hasan: added this line
@@ -1232,7 +1239,7 @@ def findOrphans(tokenList,kmeansList,f):
                     minScore = score
                     minsCharClass = charClass
             if minsCharClass == 255: continue
-            if token.tokenID in labels.keys(): # Hasan added this 'if' statement
+            if token.tokenID in list(labels.keys()): # Hasan added this 'if' statement
                 if chr(minsCharClass) == labels[token.tokenID]: match+=1
                 else: 
                     notMatch+=1
@@ -1241,7 +1248,7 @@ def findOrphans(tokenList,kmeansList,f):
                 #print chr(minsCharClass),"not equal to",labels[token.tokenID]
                 #if minScore == minScoreThresh: addToFont(tokenID,fontList)
     if options.verbose >= 1:
-        print "match ratio",match/float(notMatch+match+.000000001),"match",match,"notMatch",notMatch
+        print("match ratio",match/float(notMatch+match+.000000001),"match",match,"notMatch",notMatch)
         logMsg(f, "match ratio "+str(match/float(notMatch+match+.000000001))+" match: "+str(match)+" notMatch: "+str(notMatch))
 
 #add tokens to candidate fonts that were missed because they were not co-occur in words e.g I
@@ -1253,14 +1260,14 @@ def adoptOrphans(CandidateFont):
     consideringToken = {}
     for c in CandidateFont.needSet:
         consideringScore[c] = 0
-    for token in allTokens.values():
+    for token in list(allTokens.values()):
         if token.assignedFontClass == CandidateFont.candidateFontID:
             if token.tokenID not in masterFontList:
               if labels[token.tokenID] in CandidateFont.needSet:
                   if token.confidenceAF >consideringScore[labels[token.tokenID]]:
                       consideringScore[labels[token.tokenID]] = token.confidenceAF
                       consideringToken[labels[token.tokenID]] = token.tokenID                
-    for tID in consideringToken.values():
+    for tID in list(consideringToken.values()):
         #complete all steps necessary to add tokenID to candidate font
         CandidateFont.addToHasSet(tID)
         CandidateFont.addToTokenSet(tID)
@@ -1279,14 +1286,14 @@ def adoptOrphans(CandidateFont):
 
 def computeAllAverages():
     '''finds the average W and H of the letters represented by a token'''
-    for token in allTokens.values():
+    for token in list(allTokens.values()):
         token.findAverageWandH()
         #print "avgs H,W",token.averageH,token.averageW
 
 def printFontListAverages(fontList):
     '''prints the average W and H of the letters represented by a token'''
     for tID in fontList:
-        print "avgs H,W",allTokens[tID].averageH,allTokens[tID].averageW
+        print("avgs H,W",allTokens[tID].averageH,allTokens[tID].averageW)
 
 def findBackandForwardDelta(tokenList,fontList):
     '''finds the average of the amount of space between a token and its adjacent letters'''
@@ -1347,13 +1354,13 @@ def reconstructFonts(f):
         visualizeFontLocation(tokenList,i) # Hasan: uncommented
         findBackandForwardDelta(tokenList,fontList)
         makeLessSupervisedFont(fontList,i) # invokes fontforge by using ccseg.txt information to add metrics and vectors to font
-    if options.verbose >=1: print "all candidates formed, assigning remainder"
+    if options.verbose >=1: print("all candidates formed, assigning remainder")
     #visualizeFontLocation(tokenList,1)
     if options.evaluate: 
         for cF in listOfCandidateFonts:
             evaluateClusterCRIME3(cF.tokenSet)
     findOrphans(tokenList,kmeansList,f) #uses the shape to assign font groups to unfonted tokens
-    if options.verbose >=1: print "runing labelNeighborhood with k=500"
+    if options.verbose >=1: print("runing labelNeighborhood with k=500")
     options.k = 500
     labelNeighborhood(tokenList)
     if options.evaluate: evaluateCRIME3_assignedREP(tokenList,f)
@@ -1385,7 +1392,7 @@ def main():
     global options
     (options, args) = parser.parse_args()
     if options.bookDir is None:
-        print "[ERROR] must set ocropus extended book directory path with -d option"
+        print("[ERROR] must set ocropus extended book directory path with -d option")
         exit(2)
 #    if options.verbose >= 1:
 #        print "Book Dir= %s"%options.bookDir
@@ -1408,13 +1415,13 @@ def main():
     global b
     global tokenCounts
     tokenCounts = []
-    print "starts reading book structure-->"
+    print("starts reading book structure-->")
     if not os.path.exists(options.bookDir):
-        print "Error: path '%s' does not exist"%options.bookDir
+        print("Error: path '%s' does not exist"%options.bookDir)
         return
     b = Book(options.bookDir)
-    print "<--ends reading book structure....\n"
-    print "Number of tokens in b.token= %i"% len(b.tokens)
+    print("<--ends reading book structure....\n")
+    print("Number of tokens in b.token= %i"% len(b.tokens))
     #readInTokenCounts(options.bookDir+"/tokenCounts.txt")
     global n
     
@@ -1427,20 +1434,20 @@ def main():
         
     if options.sparse: 
         n = {}
-        print "[info] Using sparse hashmap for co-occurance matrix (requires less memory, but slow)"
+        print("[info] Using sparse hashmap for co-occurance matrix (requires less memory, but slow)")
     else: 
         if b.tokens == {}:
-            print "[fatal error] No tokens were found in the book structure."
-            print "   [info] pages2lines stage could be the source of this error."
+            print("[fatal error] No tokens were found in the book structure.")
+            print("   [info] pages2lines stage could be the source of this error.")
             exit(2)
         try:
             n=zeros((max(b.tokens)+1,max(b.tokens)+1))
-            print "[info] Using 2d array for co-occurance matrix (fast in execution)"
+            print("[info] Using 2d array for co-occurance matrix (fast in execution)")
         except:
-            print "[warn] Not enough memory. fontGrouper requires huge memory size to process the current book."
-            print "  [info] Switching from 2d array to sparse hash-map instead."
-            print "    [warn] sparse hash map is slow and execution time could take hours [depends on book size]."
-            print "      [tip] to speed up the process, use -s option to set numSwaps to 1 instead of the requested [or default] value of %i" % options.numSwaps
+            print("[warn] Not enough memory. fontGrouper requires huge memory size to process the current book.")
+            print("  [info] Switching from 2d array to sparse hash-map instead.")
+            print("    [warn] sparse hash map is slow and execution time could take hours [depends on book size].")
+            print("      [tip] to speed up the process, use -s option to set numSwaps to 1 instead of the requested [or default] value of %i" % options.numSwaps)
             options.sparse = True
             n = {}
             

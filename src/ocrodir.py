@@ -23,7 +23,12 @@
 # Primary Repository: 
 # Web Sites: www.iupr.com
 
-import os, glob, string, sys, time, getopt, commands, math, numpy, datetime, platform, tempfile
+
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from builtins import object
+import os, glob, string, sys, time, getopt, subprocess, math, numpy, datetime, platform, tempfile
 import codecs
 from numpy import *
 
@@ -39,37 +44,37 @@ def readFile(fn):
         f.close()
         return tmp;
     except UnicodeDecodeError:
-        print "[err] Error reading file ", fn
+        print("[err] Error reading file ", fn)
         return []
     except IOError:
-        print "[warn] file could not be opened: ",fn
+        print("[warn] file could not be opened: ",fn)
         return []
 
 #reads locations of where each image belongs on page (bounding box)
 def readBoxFile(fn):
-    if os.path.exists(fn)== False:
-        print "[warn] file could not be opened: ",fn
+    if not os.path.exists(fn):
+        print("[warn] file could not be opened: ", fn)
         return []
-    f    = file(fn, "r")
-    data = [line.split() for line in f]
-    f.close()
-    coords = zeros([len(data),4],int)
+    with open(fn, "r") as f:
+        data = [line.split() for line in f]
+    
+    coords = numpy.zeros([len(data), 4], int)
     for i in range(len(data)):
-        coords[i,0] = int(data[i][0]) # x0
-        coords[i,1] = int(data[i][1]) # y0
-        coords[i,2] = int(data[i][2]) # x1
-        coords[i,3] = int(data[i][3]) # y1
+        coords[i, 0] = int(data[i][0])  # x0
+        coords[i, 1] = int(data[i][1])  # y0
+        coords[i, 2] = int(data[i][2])  # x1
+        coords[i, 3] = int(data[i][3])  # y1
     return coords
 
 
 #reads shift File containing pairs of parameters tx, ty for each cc
 def readShiftFile(fn):
     if os.path.exists(fn)== False:
-        print "[warn] file could not be opened: ",fn
+        print("[warn] file could not be opened: ",fn)
         return []
-    f    = file(fn, "r")
-    data = [line.split() for line in f]
-    f.close()
+    with open(fn, "r") as f:
+        data = [line.split() for line in f]
+    
     coords = zeros([len(data),4],int)
     for i in range(len(data)):
         coords[i,0] = int(data[i][0]) # x0
@@ -81,11 +86,10 @@ def readShiftFile(fn):
 #reads the output from binned clustering
 def readTokenIDFile(fn):
     if os.path.exists(fn) == False:
-        print "[warn] file could not be opened: ",fn
+        print("[warn] file could not be opened: ",fn)
         return []
-    f    = file(fn, "r")
-    data = [line.split() for line in f]
-    f.close()
+    with open(fn, "r") as f:
+        data = [line.split() for line in f]
     tID = zeros([len(data)],int)
     for i in range(len(data)):
         tID[i] = int(data[i][0])
@@ -93,7 +97,7 @@ def readTokenIDFile(fn):
 
 #================= BOOK CLASS ===============
 #== Object that represents the book structure ==
-class Book:
+class Book(object):
     
     # default constructor
     def __init__(self):
@@ -201,7 +205,7 @@ class Book:
 #================= PAGE CLASS ===============
 
 # child of book object, each book has n pages. Corresponds to OCRopus book structure
-class Page:
+class Page(object):
     # default constructor
     def __init__(self):
         self.number   = -1 # page number
@@ -292,7 +296,7 @@ class Page:
 #================= LINE CLASS ===============
 
 #child of page, every page contains x lines. Corresponds to OCRopus structure
-class Line:
+class Line(object):
     def __init__(self):
         self.number   = -1 # page number
         self.image    = "" # original image file name
@@ -431,7 +435,7 @@ class Line:
             self.fontHeight = median(xChrH)*1.5
         # if either an ascender or a descender was wound use 1.5 x size as lineHeight
         if len(aChrH) == 0 and len(dChrH)>0:
-            print self.ccs, shape(self.ccs), shape(self.ccs)[1]
+            print(self.ccs, shape(self.ccs), shape(self.ccs)[1])
             self.fontHeight = median(xChrH)*1.5
         if len(aChrH) > 0 and len(dChrH)==0:
             self.fontHeight = median(xChrH)*1.5

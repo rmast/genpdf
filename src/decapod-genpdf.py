@@ -24,6 +24,8 @@
 # Web Sites: www.iupr.com
 
 
+
+from builtins import object
 import os
 import sys
 import time
@@ -34,7 +36,7 @@ from optparse import OptionParser # easier parsing of the cmd line parameters
 import json
 
 
-class Options:
+class Options(object):
     def __init__(self):
         self.dpi           = 300       # resolution of the input data
         self.pdfFileName   = "./out.pdf" # name of the resulting pdf file
@@ -233,10 +235,10 @@ def main(sysargv):
         opt.pdfFileName = options.pdfFileName
     opt.fontFileName = options.fontFileName
     opt.bitdepth = options.bitdepth
-    if opt.pdfOutputType in pipelineProgressGen.keys():
+    if opt.pdfOutputType in list(pipelineProgressGen.keys()):
         pipelineProgress = pipelineProgressGen[opt.pdfOutputType]
     else:
-        print "[warn]: Invalid PDF type. Switching to PDF type 1"
+        print("[warn]: Invalid PDF type. Switching to PDF type 1")
         opt.pdfOutputType = 1
     
     start = time.time()
@@ -249,13 +251,13 @@ def main(sysargv):
     retCode = subprocess.call(opt.book2PagesCMD)
     if (retCode != 0):
         updatePipelineProgress(opt.pdfFileName, pipelineProgress, '', 'off')
-        print "[Error] generating book structure did not work as expected! (%s)" %(opt.book2PagesCMD)
+        print("[Error] generating book structure did not work as expected! (%s)" %(opt.book2PagesCMD))
         sys.exit(2) #unknown error
 
     endBin = time.time()
-    print infoToken+"processComplete:book2pages"
+    print(infoToken+"processComplete:book2pages")
     if opt.verbose>1:
-        print "[Info]: time used by binarization: %d sec" %(endBin - start)
+        print("[Info]: time used by binarization: %d sec" %(endBin - start))
 
  
     opt.psegCMD = opt.generatePSegCMD()
@@ -264,21 +266,21 @@ def main(sysargv):
     retCode = subprocess.call(opt.psegCMD)
     if (retCode != 0):
         updatePipelineProgress(opt.pdfFileName, pipelineProgress, '', 'off')
-        print "[Error] page segmentation did not work as expected! (%s)" %(opt.psegCMD)
+        print("[Error] page segmentation did not work as expected! (%s)" %(opt.psegCMD))
         sys.exit(2) #unknown error
     
     if(opt.pdfOutputType > 1): #Hasan
         endPSeg = time.time()
-        print infoToken+"processComplete:pages2lines"
+        print(infoToken+"processComplete:pages2lines")
         if opt.verbose>1:
-            print "[Info]: time used by page segmentation: %d sec" %(endPSeg - endBin)
+            print("[Info]: time used by page segmentation: %d sec" %(endPSeg - endBin))
 
         opt.lineRec1CMD = opt.generateLineRec1CMD()
         updatePipelineProgress(opt.pdfFileName, pipelineProgress, 'lines2fsts', 'on')
         retCode = subprocess.call(opt.lineRec1CMD)
         if (retCode != 0):
             updatePipelineProgress(opt.pdfFileName, pipelineProgress, '', 'off')
-            print "[Error] line2fst recognition did not work as expected! (%s)" %(opt.lineRec1CMD)
+            print("[Error] line2fst recognition did not work as expected! (%s)" %(opt.lineRec1CMD))
             sys.exit(2) #unknown error
         
         opt.lineRec2CMD = opt.generateLineRec2CMD()
@@ -286,74 +288,74 @@ def main(sysargv):
         retCode = subprocess.call(opt.lineRec2CMD)
         if (retCode != 0):
             updatePipelineProgress(opt.pdfFileName, pipelineProgress, '', 'off')
-            print "[Error] fst2txt recognition did not work as expected! (%s)" %(opt.lineRec2CMD)
+            print("[Error] fst2txt recognition did not work as expected! (%s)" %(opt.lineRec2CMD))
             sys.exit(2) #unknown error
 
         endRecog = time.time()
-        print infoToken+"processComplete:linerec"        
+        print(infoToken+"processComplete:linerec")        
         if opt.verbose>1:
-            print "[Info]: time used by text recognizer: %d sec" %(endRecog-endPSeg)
+            print("[Info]: time used by text recognizer: %d sec" %(endRecog-endPSeg))
 
 
     endOCROPUS = time.time()
     if opt.verbose>1:
-        print "[Info]: time used by OCRopus: %d sec" %(endOCROPUS - start)
+        print("[Info]: time used by OCRopus: %d sec" %(endOCROPUS - start))
 
     #run clustering
     if(opt.pdfOutputType==2 or opt.pdfOutputType==3 or opt.pdfOutputType==4):
         if opt.verbose>1:
-            print "[Info]: running clustering"
+            print("[Info]: running clustering")
         #cmd = shlex.split(clustercommand)
         opt.clusterCMD = opt.generateClusterCMD()
         updatePipelineProgress(opt.pdfFileName, pipelineProgress, 'binned-inter', 'on')
         retCode = subprocess.call(opt.clusterCMD)
         if (retCode != 0):
             updatePipelineProgress(opt.pdfFileName, pipelineProgress, '', 'off')
-            print "[Error]: clustering did not work as expected! (%s)" %(opt.clusterCMD)
+            print("[Error]: clustering did not work as expected! (%s)" %(opt.clusterCMD))
         #os.system(clustercommand)
-        print infoToken+"processComplete:clustering"
+        print(infoToken+"processComplete:clustering")
     endClustering = time.time()
     if opt.verbose>1:
-        print "[Info]: time used by clustering: %d sec" %(endClustering - endOCROPUS)
+        print("[Info]: time used by clustering: %d sec" %(endClustering - endOCROPUS))
 
 
     #run font generation
     if(opt.pdfOutputType==4):
         if opt.verbose>1:
-            print "[Info]: running font generation"
+            print("[Info]: running font generation")
         #cmd = shlex.split(clustercommand)
         opt.fontCMD = opt.generateFontCMD()
         updatePipelineProgress(opt.pdfFileName, pipelineProgress, 'fontGrouper.py', 'on')
         retCode = subprocess.call(opt.fontCMD)
         if (retCode != 0):
             updatePipelineProgress(opt.pdfFileName, pipelineProgress, '', 'off')
-            print "[Error]: font generation did not work as expected! (%s)" %(opt.fontCMD)
-        print infoToken+"processComplete:fontGen"
+            print("[Error]: font generation did not work as expected! (%s)" %(opt.fontCMD))
+        print(infoToken+"processComplete:fontGen")
     endFont = time.time()
     if opt.verbose>1:
-        print "[Info]: time used by font generation: %d sec" %(endFont - endClustering)
+        print("[Info]: time used by font generation: %d sec" %(endFont - endClustering))
 
     #run pdf gen
     if opt.verbose>1:
-        print "[Info]: generating pdf"
+        print("[Info]: generating pdf")
     
     opt.pdfGenCMD = opt.generatePDFCMD()
     updatePipelineProgress(opt.pdfFileName, pipelineProgress, 'ocro2pdf.py', 'on')
     retCode = subprocess.call(opt.pdfGenCMD)
     if (retCode != 0):
         updatePipelineProgress(opt.pdfFileName, pipelineProgress, '', 'off')
-        print "[Error] PDF generation did not work as expected! (%s)" %(opt.pdfGenCMD)
+        print("[Error] PDF generation did not work as expected! (%s)" %(opt.pdfGenCMD))
         sys.exit(2)
     updatePipelineProgress(opt.pdfFileName, pipelineProgress, '*END*', 'off')
     
     endGenPDF = time.time()
-    print infoToken+"processComplete:genpdf"
+    print(infoToken+"processComplete:genpdf")
     if opt.verbose>1:
-        print "[Info]: time used by pdf generation: %d sec" %(endGenPDF - endFont)
-        print "[Info]: time used for whole process: %d sec" %(endGenPDF - start)
+        print("[Info]: time used by pdf generation: %d sec" %(endGenPDF - endFont))
+        print("[Info]: time used for whole process: %d sec" %(endGenPDF - start))
 
 def usage(progName):
-    print "\n%s [OPTIONS]\n\n"\
+    print("\n%s [OPTIONS]\n\n"\
 	      "   -b  --book         name of multipage tiff file\n"\
           "   -d, --dir          Ocropus Directory to be converted\n"\
           "   -p, --pdf          PDF File that will be generated\n"\
@@ -373,7 +375,7 @@ def usage(progName):
           "   -C, --enforceCSEG  characters can only match if there CSEG labels are equal \n"\
           "   -e, --eps          matching threshold [default=7] \n"\
           "   -s, --reps         matching threshold [default=.07] \n"\
-          "   -B, --bit          Bit depth of the output image (1, 8, 24))"
+          "   -B, --bit          Bit depth of the output image (1, 8, 24))")
 
 
 if __name__ == "__main__":

@@ -23,6 +23,11 @@
 # Web Sites: www.iupr.com
 
 
+
+
+from builtins import str
+from builtins import range
+from past.utils import old_div
 from ocrodir import *
 from optparse import OptionParser 
 import sys
@@ -43,9 +48,9 @@ def createImageList(opt):
     list = glob.glob(opt.srcDirectory + "*.*") 
     
     if opt.verbose == 1:
-        print "[info] Filtering input images:\n"
-        print "[info] supported image types", imageFormats
-        print "[info] want to support a new image type? Add it into imageFormats list" # at line %i"%(int(__imageFormatLine__))
+        print("[info] Filtering input images:\n")
+        print("[info] supported image types", imageFormats)
+        print("[info] want to support a new image type? Add it into imageFormats list") # at line %i"%(int(__imageFormatLine__))
         
     #filter the list by removing non-images
     for i in list:
@@ -75,17 +80,17 @@ def genPDF4ImageList(fileList, opt):
             booksDirList.append([j, i, nameNoExt+"t" + j])
             cmd = ["./decapod-genpdf.py", "-t", j, "-b", i, "-d", (nameNoExt+"t" + j + ""), "-p", (nameNoExt + "[t" + j + "]" + ".pdf"), '-r', "%s"%opt.dpi, "-v", "2", "-W", "%s"%opt.pageWidth, "-H", "%s"%opt.pageHeight, "-B", "%s"%opt.bitdepth]
             if opt.verbose == 1:
-                print "************** Now executing genpdf with image:", i, "\nCommand: ", cmd ," ************"
+                print("************** Now executing genpdf with image:", i, "\nCommand: ", cmd ," ************")
             begTime = time.time()
             retCode = subprocess.call(cmd)
             if retCode != 0:
-                print "[warn] decapod-genpdf did not work as expected"
+                print("[warn] decapod-genpdf did not work as expected")
             endTime = time.time()
             if opt.verbose == 1:
-                print "Duration to run genpdf pipeline for image %s= %i sec."% (i, endTime - begTime)
+                print("Duration to run genpdf pipeline for image %s= %i sec."% (i, endTime - begTime))
     batchEnd = time.time()
     if opt.verbose == 1:
-        print "Duration to run genpdf pipeline for list of images %s= %i:%i:%i  (h:m:s)"% (fileList, (batchEnd - batchBegin)/(60*60), (batchEnd - batchBegin)/60, (batchEnd - batchBegin)%60)
+        print("Duration to run genpdf pipeline for list of images %s= %i:%i:%i  (h:m:s)"% (fileList, old_div((batchEnd - batchBegin),(60*60)), old_div((batchEnd - batchBegin),60), (batchEnd - batchBegin)%60))
     return booksDirList
 
 def generateCoverPage(c, dateNowStr, timeNowStr, height):
@@ -118,7 +123,7 @@ def loadTokenImage(tokFileName, bookDir, opt):
 #    tokenFileName = bookDir + "/tokens/" + "%08i.png"%int(tokNum)
     im = Image.open(tokFileName)
     if opt.verbose == 1:
-        print(tokFileName,"\n")
+        print((tokFileName,"\n"))
     return im
                    
 def loadLineImage(line, opt):
@@ -126,7 +131,7 @@ def loadLineImage(line, opt):
     im = Image.open(line.image)
 #    im = Image.open(line.csegFile)
     if opt.verbose==1:
-        print(line.image,"\n")
+        print((line.image,"\n"))
     return im
 
 def findBBox(image):
@@ -170,8 +175,8 @@ def MSE(tokImage, charImage, bbx, opt):
 #    tokImage.show()
 #    bb = tokImage.getbbox()
     if opt.verbose == 1:
-        print "token bb = %s"%(bb,)
-        print "char bb= %s"%(bbx,)
+        print("token bb = %s"%(bb,))
+        print("char bb= %s"%(bbx,))
     bbTemp = [bb[0], bb[1], bb[2]+1, bb[3]+1]
     tokImageCrop = tokImage.crop(bbTemp)
 ##    tokImageCrop.save("/home/hasan/Desktop/tokImageCrop.png")
@@ -193,10 +198,10 @@ def MSE(tokImage, charImage, bbx, opt):
 #    print "charImage.size=%s"%((charImage.size),)
     
     if opt.verbose == 1:
-        print "tokImage.size=%s"%((tokImage.size),)
-        print "tokImageCrop.size=%s"%((tokImageCrop.size),)
-        print "tokImageCropScaled.size=%s"%((tokImageCropScaled.size),)
-        print "charImage.size=%s\n"%((charImage.size),)
+        print("tokImage.size=%s"%((tokImage.size),))
+        print("tokImageCrop.size=%s"%((tokImageCrop.size),))
+        print("tokImageCropScaled.size=%s"%((tokImageCropScaled.size),))
+        print("charImage.size=%s\n"%((charImage.size),))
 #    print  "xsize=%i"%xsize
 #    print  "ysize=%i"%ysize
 ##    tokCopy = tokImageCropScaled.copy()
@@ -239,9 +244,9 @@ def MSE(tokImage, charImage, bbx, opt):
         yt = yt + 1
         y1flip = y1flip + 1
         if xcpt != 0:   
-            print "except= %i"%xcpt
+            print("except= %i"%xcpt)
 ##    tokCopy.save("/home/hasan/Desktop/tok-org-diff.png")
-    return (mse/((1.0 * xsize)*ysize))
+    return (old_div(mse,((1.0 * xsize)*ysize)))
     
 def getPerformance(b, opt):
     psnr = 0.0
@@ -272,7 +277,7 @@ def getPerformance(b, opt):
         
 def calculateImg2PDFPerformance(booksDirList, fileList, opt):
     if len(fileList) == 0:
-        print "warn: No images to process.\nExiting."
+        print("warn: No images to process.\nExiting.")
         return
     path = os.path.dirname(fileList[0]) # get the working folder name  
     dateTimeNow = datetime.datetime.now()

@@ -23,6 +23,12 @@
 # Web Sites: www.iupr.com
 
 
+
+
+from builtins import chr
+from builtins import str
+from builtins import range
+from past.utils import old_div
 from ocrodir import *
 import fontforge
 from optparse import OptionParser 
@@ -36,25 +42,25 @@ def fontAnalysis():
 #    print "Kids[0] ", x.Root.Pages.Kids[0]
 #    return 
     
-    print "Testing fontforge"
+    print("Testing fontforge")
     fontforge.setPrefs("PreferPotrace", 1)
     fontforge.setPrefs("AutotraceAsk", "-O 0.5 -u 1 -t 1")
     font = fontforge.open("/home/hasan/Desktop/ClearScan/fnt179.cff")
     for i in font.glyphs():
-        print "encoding %s"% unichr(i.encoding)
+        print("encoding %s"% chr(i.encoding))
 #        if i.encoding >=0x30 and i.encoding <= 0x80:
-        i.export("/home/hasan/Desktop/ClearScan/chr/"+unichr(i.encoding)+".png")
+        i.export("/home/hasan/Desktop/ClearScan/chr/"+chr(i.encoding)+".png")
 #        print font.ndEncodingSlot()
     return 
     glyphA = font["C"]
     foreground = glyphA.foreground
     for i in range(len(foreground)):
 #        print "background[%i] = %s"%(i, glyphA.background,)
-        print "foreground[%i] = %s"%(i, foreground[i],)
-        print "len(foreground[%i]) = %s"%(i, len(foreground[i]))
-        print "foreground[%i].closed = %s"%(i, str(foreground[i].closed==True))
-        print "foreground[%i].spiro = %s\n"%(i, str(foreground[i].spiro))
-        print "foreground[%i].spiro[0] = %s\n"%(i, str(foreground[i].spiro[0]))
+        print("foreground[%i] = %s"%(i, foreground[i],))
+        print("len(foreground[%i]) = %s"%(i, len(foreground[i])))
+        print("foreground[%i].closed = %s"%(i, str(foreground[i].closed==True)))
+        print("foreground[%i].spiro = %s\n"%(i, str(foreground[i].spiro)))
+        print("foreground[%i].spiro[0] = %s\n"%(i, str(foreground[i].spiro[0])))
         glyphA.export("/home/hasan/Desktop/C.png")
 #        spiro = foreground[i].spiro[0]
 #        spiro = (spiro[0]+1,spiro[1], spiro[2], spiro[3])
@@ -69,8 +75,8 @@ def fontAnalysis():
     
 #########################################################3
     x = PdfReader("/home/hasan/ClearScan/book[t1][ClearScan].pdf")
-    print "Pagecount= %i "% (len(x.Root.Pages))
-    print "Kids[0] ", x.Root.Pages.Kids[0]
+    print("Pagecount= %i "% (len(x.Root.Pages)))
+    print("Kids[0] ", x.Root.Pages.Kids[0])
     return 
 
 def initFontForge():
@@ -82,7 +88,7 @@ def loadFont(fontName):
     if os.path.isfile(fontName):
         return fontforge.open(fontName)
     else:
-        print "[fatal Error]: The file '%s' does not exist or is not a file"%fontName
+        print("[fatal Error]: The file '%s' does not exist or is not a file"%fontName)
         return None
 
 def loadGlyphs(font):
@@ -96,7 +102,7 @@ def loadGlyphs(font):
     for i in allchars:
 #        if ord(i) in encoding:
         if i in font:
-            print i
+            print(i)
             glyph = font[i]
             glyphDict[i] = glyph
     return glyphDict
@@ -112,9 +118,9 @@ def rasterizeGlyphs(glyphDict, bookPath, fontFolder):
 #    digits = "0123456789"
 #    allchars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
     glyphNameDict = {}
-    for i in glyphDict.keys():
+    for i in list(glyphDict.keys()):
         glyphFileName = ofontPath+i+".png"
-        print glyphFileName
+        print(glyphFileName)
         glyphDict[i].export(glyphFileName)
         if not os.path.isfile(glyphFileName):
             del glyphDict[i]
@@ -123,7 +129,7 @@ def rasterizeGlyphs(glyphDict, bookPath, fontFolder):
 
 def loadRastGlyphs(glyphNameDict):
     glyphImageDict = {}
-    for i in glyphNameDict.keys():
+    for i in list(glyphNameDict.keys()):
 #        print i
         image = Image.open(glyphNameDict[i])
         glyphImageDict[i] = image
@@ -131,7 +137,7 @@ def loadRastGlyphs(glyphNameDict):
 
 def loadRastGlyphs1(glyphNameDict):
     glyphImageDict = {}
-    for i in glyphNameDict.keys():
+    for i in list(glyphNameDict.keys()):
 #        print i
         image = Image.open(glyphNameDict[i])
         glyphImageDict[i] = image.convert("RGB")
@@ -199,17 +205,17 @@ def cropAndResize(oImage, rImage):
 def performance(oImageCR, rImageCR):
     oWidth, oHeight = oImageCR.size
     sum = 0
-    for i in xrange(oWidth-1):
-        for j in xrange(oHeight-1):
+    for i in range(oWidth-1):
+        for j in range(oHeight-1):
             op = oImageCR.getpixel((i,j))
             rp = rImageCR.getpixel((i,j))
             sum += (op - rp) * (op - rp)
-    return sum / (oWidth * oHeight)
+    return old_div(sum, (oWidth * oHeight))
 
 def reconstructedFontPerformanceIndex(oGlyphImageDict, rGlyphImageDict):
     performanceIndexDict = {}
-    for i in oGlyphImageDict.keys():
-        if i in rGlyphImageDict.keys():
+    for i in list(oGlyphImageDict.keys()):
+        if i in list(rGlyphImageDict.keys()):
             (oGlyphImageDict[i], rGlyphImageDict[i]) = cropAndResize(oGlyphImageDict[i], rGlyphImageDict[i])
             performanceIndexDict[i] = performance(oGlyphImageDict[i], rGlyphImageDict[i])
     return performanceIndexDict
@@ -217,12 +223,12 @@ def reconstructedFontPerformanceIndex(oGlyphImageDict, rGlyphImageDict):
 def getPerformanceT4(performanceIndexDict, b, opt):
     psnr = 0.0
     accMSE = 0.0
-    performanceIndexDictKeys  = performanceIndexDict.keys()
+    performanceIndexDictKeys  = list(performanceIndexDict.keys())
     mse = 0.0
 #    print b.tokens
     for i in range(len(b.pages)):
         for j in range(len(b.pages[i].lines)):
-            print "processing page %i, line %i"%(i,j)
+            print("processing page %i, line %i"%(i,j))
             k = b.pages[i].lines[j]
                 #bb = loadLineBB(k.ccs) # load BB for each char in the line into `bb` list
             if opt.verbose == 1:
@@ -239,7 +245,7 @@ def getPerformanceT4(performanceIndexDict, b, opt):
                     if char in performanceIndexDictKeys:
                         mse = performanceIndexDict[char] #FIXME
                         accMSE += mse
-                print "mse= %i"% mse
+                print("mse= %i"% mse)
 #                z += 1
     print("***************")
     print("accMSE= %i"%(accMSE)) 
@@ -261,7 +267,7 @@ def loadLineImage(line, opt):
     im = Image.open(line.image)
 #    im = Image.open(line.csegFile)
     if opt.verbose==1:
-        print(line.image,"\n")
+        print((line.image,"\n"))
     return im
 
 def findBBox1(image):
@@ -305,15 +311,15 @@ def MSE(tokImage, charImage, bbx, opt):
 #    tokImage.show()
 #    bb = tokImage.getbbox()
     if opt.verbose == 1:
-        print "token bb = %s"%(bb,)
-        print "char bb= %s"%(bbx,)
+        print("token bb = %s"%(bb,))
+        print("char bb= %s"%(bbx,))
     bbTemp = [bb[0], bb[1], bb[2]+1, bb[3]+1]
     tokImageCrop = tokImage.crop(bbTemp)
 ##    tokImageCrop.save("/home/hasan/Desktop/tokImageCrop.png")
 #    tokImageCrop.show()
     tokImageCropScaled = tokImageCrop.resize((xsize, ysize), Image.NEAREST)# Resizing the CC rather than the whole image
     if opt.verbose ==1:
-        print "tokImageCrop.mode, tokImageCrop.histogram", tokImageCrop.mode, tokImageCrop.histogram()
+        print("tokImageCrop.mode, tokImageCrop.histogram", tokImageCrop.mode, tokImageCrop.histogram())
 #    tokImageCropScaled.save("/home/hasan/Desktop/tokImageCropScaled.png")
     tokImageCropScaledPix = tokImageCropScaled.load() 
 #    charImage = charImage.transpose(Image.FLIP_TOP_BOTTOM)
@@ -327,16 +333,16 @@ def MSE(tokImage, charImage, bbx, opt):
 #    print "tokImage.size=%s"%((tokImage.size),)
 #    charImageCrop = charImage.crop([x1, charH-y2, x2, charH-y1])
     if opt.verbose == 1:
-        print "charImageCrop.mode, charImageCrop.histogram", charImageCrop.mode, charImageCrop.histogram()
+        print("charImageCrop.mode, charImageCrop.histogram", charImageCrop.mode, charImageCrop.histogram())
 #    charImageCrop.save("/home/hasan/Desktop/charImageCrop.png")
 #    charImage.show()
 #    print "charImage.size=%s"%((charImage.size),)
 # end uncomemnt    
     if opt.verbose == 1:
-        print "tokImage.size=%s"%((tokImage.size),)
-        print "tokImageCrop.size=%s"%((tokImageCrop.size),)
-        print "tokImageCropScaled.size=%s"%((tokImageCropScaled.size),)
-        print "charImage.size=%s\n"%((charImage.size),)
+        print("tokImage.size=%s"%((tokImage.size),))
+        print("tokImageCrop.size=%s"%((tokImageCrop.size),))
+        print("tokImageCropScaled.size=%s"%((tokImageCropScaled.size),))
+        print("charImage.size=%s\n"%((charImage.size),))
 #    print  "xsize=%i"%xsize
 #    print  "ysize=%i"%ysize
 #    tokCopy = tokImageCropScaled.copy()
@@ -382,9 +388,9 @@ def MSE(tokImage, charImage, bbx, opt):
         yt = yt + 1
         y1flip = y1flip + 1
     if xcpt != 0:   
-        print "[error] except#= %i, match#=%i"%(xcpt,match)
+        print("[error] except#= %i, match#=%i"%(xcpt,match))
 #    tokCopy.save("/home/hasan/Desktop/tok-org-diff.png")
-    return (mse/((1.0 * xsize)*ysize))
+    return (old_div(mse,((1.0 * xsize)*ysize)))
     
 def getPerformance(oGlyphImageDict, b, opt):
     psnr = 0.0
@@ -396,15 +402,15 @@ def getPerformance(oGlyphImageDict, b, opt):
     Achar = 47*54
     Evalue = 64*64
     LinperPage = 40
-    oGlyphImageDictKeys = oGlyphImageDict.keys()
+    oGlyphImageDictKeys = list(oGlyphImageDict.keys())
 #    print b.tokens
     for i in range(len(b.pages)):
-        print "%i: line/page= %i"%(i,len(b.pages[i].lines)) 
+        print("%i: line/page= %i"%(i,len(b.pages[i].lines))) 
         for j in range(len(b.pages[i].lines)):
             k = b.pages[i].lines[j]
                 #bb = loadLineBB(k.ccs) # load BB for each char in the line into `bb` list
 #            if opt.verbose == 1:
-            print "processing page %i, line %i"%(i,j)
+            print("processing page %i, line %i"%(i,j))
             charImage = loadLineImage(k, opt)
             z=0
             if k.checkTextable():
@@ -477,8 +483,8 @@ def main():
         help="verbose type: 0 (silent) or 1 (detailed)")
     (opt, args) = parser.parse_args()
     if opt.book == "" or opt.ofont =="" or opt.rfont=="":
-        print "Usage: ./fontRecPer.py -d bookDir/ -o font_name.ttf [-r font_name.ttf]"
-        print "       if -r option is ommited, the bookDir/ is assumed to hold the book info of the reconstructed font in raster format"
+        print("Usage: ./fontRecPer.py -d bookDir/ -o font_name.ttf [-r font_name.ttf]")
+        print("       if -r option is ommited, the bookDir/ is assumed to hold the book info of the reconstructed font in raster format")
         return 
     
     if opt.book[len(opt.book)-1] != '/':
@@ -489,9 +495,9 @@ def main():
 #    else:
 #        rFontList = []
 
-    print "Loading book structure ->"
+    print("Loading book structure ->")
     book = Book(opt.book) # Load the book structure
-    print "<- Book structure loaded"
+    print("<- Book structure loaded")
     
     initFontForge()
     ofont = loadFont(opt.ofont)
@@ -521,7 +527,7 @@ def main():
             performance = getPerformanceT4(performanceIndexDict, book, opt)
         else:
             performance = getPerformance(oGlyphImageDict, book, opt)
-    print"End-of-Program: fontRecper.py"
+    print("End-of-Program: fontRecper.py")
     return performance
     
 if __name__ == "__main__":

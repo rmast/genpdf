@@ -23,7 +23,13 @@
 # Primary Repository: 
 # Web Sites: www.iupr.com
 
-import os, glob, string, sys, time, getopt, commands, math, numpy, datetime, platform, tempfile
+
+
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from past.utils import old_div
+import os, glob, string, sys, time, getopt, subprocess, math, numpy, datetime, platform, tempfile
 from ocrodir import *
 import codecs
 from numpy import *
@@ -33,7 +39,7 @@ from reportlab.lib.units import cm
 from reportlab.lib.units import inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from cStringIO import StringIO # "cStringIO" is faster, but if you need to subclass, use "StringIO" 
+from io import StringIO # "cStringIO" is faster, but if you need to subclass, use "StringIO" 
 import reportlab.rl_config # used for TTF support
 import json
 
@@ -82,15 +88,15 @@ def convert2ImagePDF(bookDir,pdfFileName, b, pdf, bitdepth):
 #                print(W/H, ar, width, height)
 #            pdf.drawInlineImage(img, 0,0,width*cm,height*cm) # use inline as each page is used only once
         factor = 0.0
-        if(W/H > ar):
+        if(old_div(W,H) > ar):
             width = float(b.pageSize[0]) # width of the page in cm
-            height= width/(W/H)
-            factor = b.pageSize[0]/W
+            height= old_div(width,(old_div(W,H)))
+            factor = old_div(b.pageSize[0],W)
 
-        if(W/H <= ar):
+        if(old_div(W,H) <= ar):
             height= float(b.pageSize[1])
-            width = height/(H/W)
-            factor = b.pageSize[1]/H
+            width = old_div(height,(old_div(H,W)))
+            factor = old_div(b.pageSize[1],H)
         resizeW = (1.0/2.54)*width*dpi # width of the image after resizing
         resizeH = (1.0/2.54)*height*dpi # height of the image after resizing 
         if(verbose > 1):
@@ -118,15 +124,15 @@ def convert2ImageTextPDF(bookDir,pdfFileName,b,pdf, bitdepth):
         H = float(img.size[1])
         # fit document image to PDF page maximizing the displayed area
         factor = 0.0
-        if(W/H > ar):
+        if(old_div(W,H) > ar):
             width = float(b.pageSize[0]) # width of the page in cm
-            height= width/(W/H)
-            factor = b.pageSize[0]/W
+            height= old_div(width,(old_div(W,H)))
+            factor = old_div(b.pageSize[0],W)
 
-        if(W/H <= ar):
+        if(old_div(W,H) <= ar):
             height= float(b.pageSize[1])
-            width = height/(H/W)
-            factor = b.pageSize[1]/H
+            width = old_div(height,(old_div(H,W)))
+            factor = old_div(b.pageSize[1],H)
         resizeW = (1.0/2.54)*width*dpi # width of the image after resizing
         resizeH = (1.0/2.54)*height*dpi # height of the image after resizing 
         if(verbose > 1):
@@ -154,7 +160,7 @@ def convert2ImageTextPDF(bookDir,pdfFileName,b,pdf, bitdepth):
                     word = word + b.pages[i].lines[j].txtAll[k] #Hasan: Changed '.txt' to '.txtAll'
                 wordPos = b.pages[i].linesPos[j] + b.pages[i].lines[j].ccs[startIndex-numSpaces]
                 if(verbose > 3):
-                    print ccPos
+                    print(ccPos)
                 
                 pdf.drawString(wordPos[0]*factor*cm, 
                                 wordPos[1]*factor*cm, word)
@@ -201,14 +207,14 @@ def convert2TokenPDF(bookDir,pdfFileName,b,pdf):
         H = float(img.size[1])
         # fit document image to PDF page maximizing the displayed area
         factor = 0.0
-        if(W/H > ar):
+        if(old_div(W,H) > ar):
             width = float(b.pageSize[0]) # width of the PDF page in cms
-            height= width/(W/H)
-            factor = b.pageSize[0]/W
-        if(W/H <= ar):
+            height= old_div(width,(old_div(W,H)))
+            factor = old_div(b.pageSize[0],W)
+        if(old_div(W,H) <= ar):
             height= float(b.pageSize[1])
-            width = height/(W/H)
-            factor = b.pageSize[1]/H
+            width = old_div(height,(old_div(W,H)))
+            factor = old_div(b.pageSize[1],H)
         resizeW = (1.0/2.54)*width*dpi # width of the image after resizing
         resizeH = (1.0/2.54)*height*dpi # height of the image after resizing
         #print("Size before %d x %d and after %d x %d" %(W,H,resizeW,resizeH))
@@ -234,7 +240,7 @@ def convert2TokenPDF(bookDir,pdfFileName,b,pdf):
                     word = word + b.pages[i].lines[j].txtAll[k] #Hasan: Changed '.txt' to '.txtAll'
                 wordPos = b.pages[i].linesPos[j] + b.pages[i].lines[j].ccs[startIndex-numSpaces]
                 if(verbose > 3):
-                    print ccPos
+                    print(ccPos)
                 
                 pdf.drawString(wordPos[0]*factor*cm, 
                                 wordPos[1]*factor*cm, word)
@@ -281,18 +287,18 @@ def convert2FontPDF(bookDir,pdfFileName,b,pdf,fontlist):
     # register all fonts
     if fontlist == "":
         for i in range(len(b.fonts)):
-            print b.fonts[i]
+            print(b.fonts[i])
             pdfmetrics.registerFont(TTFont("%d" %(i), b.fonts[i]));
     else: # if 'fontlist' file is available then use the original fonts
         f = open(fontlist,"r")
         line = f.readline() # Hasan: FIXME: This code might fail if the json file is quite large. This argument needs validation.
         dict = json.loads(line)
 #        dict = dict.JSONDecoder()
-        for k in dict.keys():
+        for k in list(dict.keys()):
             try:
                 pdfmetrics.registerFont(TTFont("%d" %(int(k)), dict[k]))
             except:
-                print "Error: unknown error"
+                print("Error: unknown error")
                 #pdfmetrics.registerFont(TTFont("%d" %(int(k)),"/home/hasan/Desktop/oFonts/Ubuntu-L.ttf")) # Hasan: FIXME: replace/remove this line !!!
     
     # aspect/ratio of the pdf page to be generated
@@ -310,18 +316,18 @@ def convert2FontPDF(bookDir,pdfFileName,b,pdf,fontlist):
         factor = 0.0
         # the next few lines check if the height or the width of the page
         # is the boundary for the size of the rescaled image
-        if(W/H > ar):
+        if(old_div(W,H) > ar):
             width = float(b.pageSize[0]) # width of the PDF page in cms
-            height= width/(W/H)
-            factor = b.pageSize[0]/W
-        if(W/H <= ar):
+            height= old_div(width,(old_div(W,H)))
+            factor = old_div(b.pageSize[0],W)
+        if(old_div(W,H) <= ar):
             height= float(b.pageSize[1])
-            width = height/(H/W)
-            factor = b.pageSize[1]/H
+            width = old_div(height,(old_div(H,W)))
+            factor = old_div(b.pageSize[1],H)
         resizeW = (1.0/2.54)*width*dpi # width of the image after resizing
         resizeH = (1.0/2.54)*height*dpi # height of the image after resizing
         
-        factorScalePx = W/(width*dpi/2.54) # this factor is needed to set the
+        factorScalePx = old_div(W,(width*dpi/2.54)) # this factor is needed to set the
             # resulting PDF size into relation with the original image size
             # this is needed to estimate the correct font size
         
@@ -340,7 +346,7 @@ def convert2FontPDF(bookDir,pdfFileName,b,pdf,fontlist):
                 # compute position of character
                 ccPos = b.pages[i].linesPos[j] + b.pages[i].lines[j].wordPos[k]
                 # set font according to information in fontID file
-                textSizePt = b.pages[i].lines[j].fontHeight/dpi*72/factorScalePx
+                textSizePt = old_div(old_div(b.pages[i].lines[j].fontHeight,dpi)*72,factorScalePx)
                 if math.isnan(textSizePt) or textSizePt < 1.0: # Hasan added this 'if': When the size of the text can not be determined, use 6pt (arbitrarily)
                     textSizePt = int(6)
                 wordFont = b.pages[i].lines[j].wordFont[k]
@@ -353,11 +359,11 @@ def convert2FontPDF(bookDir,pdfFileName,b,pdf,fontlist):
                 # draw character in correct position
                 if verbose > 1:
                     WORD = b.pages[i].lines[j].words[k]
-                    print "font#=%d, size=%dpt:"%(wordFont, textSizePt), WORD,ccPos[0]*factor*cm, baseLine*factor*cm, b.pages[i].lines[j].words[k]
+                    print("font#=%d, size=%dpt:"%(wordFont, textSizePt), WORD,ccPos[0]*factor*cm, baseLine*factor*cm, b.pages[i].lines[j].words[k])
                 if not math.isnan(ccPos[0]*factor*cm) and not math.isnan(baseLine*factor*cm):
                     pdf.drawString(ccPos[0]*factor*cm, baseLine*factor*cm, b.pages[i].lines[j].words[k])
             if verbose > 1:
-                print ""        
+                print("")        
         pdf.showPage() # finish PDF page
     pdf.save() # save PDF to file
    
@@ -478,7 +484,7 @@ def saveBookTextTo(b,pdfName):
         finally:
             f.close()
     except IOError:
-        print "[error]: Error writing OCR output to text file."
+        print("[error]: Error writing OCR output to text file.")
         pass
     return
 
@@ -501,9 +507,9 @@ def main(sysargv):
     try:
         optlist, args = getopt.getopt(sysargv[1:], 'ht:d:p:W:H:v:r:B:f:', ['help','type=','dir=','pdf=','width=','height=','verbose=','resolution=','bitdepth=', 'fontlist='])
         #print(optlist, args)
-    except getopt.error, msg:
-        print msg
-        print "for help use --help"
+    except getopt.error as msg:
+        print(msg)
+        print("for help use --help")
         sys.exit(2)
     # process options
     for o, a in optlist:
@@ -572,7 +578,7 @@ def main(sysargv):
     if pdfOutputType in [2,3,4]:
             saveBookTextTo(b, pdfFileName)
 
-    print "End-of-Program: ocro2pdf.py"
+    print("End-of-Program: ocro2pdf.py")
 
 #    print "%d"%(t1 - time.time() )
         # example code for generating a PDF with a Font
@@ -586,7 +592,7 @@ def main(sysargv):
 
 # print help information
 def usage(progName):
-    print "\n%s [OPTIONS] -dir ocroDir -pdf out.pdf\n\n"\
+    print("\n%s [OPTIONS] -dir ocroDir -pdf out.pdf\n\n"\
           "   -d, --dir          Ocropus Directory to be converted\n"\
           "   -p, --pdf          PDF File that will be generated\n"\
           " Options:\n"\
@@ -600,7 +606,7 @@ def usage(progName):
           "   -W, --width:       width of the PDF page [in cm] [default = 21.0]:\n"\
           "   -H, --height:      height of the PDF page [in cm] [default = 29.7]:\n"\
           "   -r, --resolution:  resolution of the images in the PDF [default = 200dpi]\n"\
-          "   -B, --bitdepth:    output image color bitdepth for PDF type 1 and 2. Valid values: 0 (default), 1, 8, 26. Upgrade is not permitted"
+          "   -B, --bitdepth:    output image color bitdepth for PDF type 1 and 2. Valid values: 0 (default), 1, 8, 26. Upgrade is not permitted")
 
 if __name__ == "__main__":
     main(sys.argv)

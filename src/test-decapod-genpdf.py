@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+from builtins import range
 import os
 import sys
 import time
@@ -19,7 +21,7 @@ def main(sysargv):
     tmpDir = tempfile.mkdtemp()+"/"
     os.rmdir(tmpDir)
     outFn  = tmpDir + "out.pdf"
-    print "========== Running test 01 ==========" 
+    print("========== Running test 01 ==========") 
     cmd = ["./decapod-genpdf.py"]
     ret = subprocess.call(cmd)
     testDes.append("Testing w/o options. Should return help message.")
@@ -27,7 +29,7 @@ def main(sysargv):
     testExp.append(0)
     testCmd.append(cmd)
     
-    print "========== Running test 02 ==========" 
+    print("========== Running test 02 ==========") 
     cmd = ["./decapod-genpdf.py","-h"]
     ret = subprocess.call(cmd)
     testDes.append("Testing -h option. Should return help message.")
@@ -35,7 +37,7 @@ def main(sysargv):
     testExp.append(0)
     testCmd.append(cmd)
     
-    print "========== Running test 03 ==========" 
+    print("========== Running test 03 ==========") 
     cmd = ["./decapod-genpdf.py","-d",tmpDir,"-p",outFn,"fn"]
     ret = subprocess.call(cmd)
     testDes.append("Testing with wrong file name options.")
@@ -44,7 +46,7 @@ def main(sysargv):
     testCmd.append(cmd)
     os.rmdir(tmpDir)    
     
-    print "========== Running test 04 ==========" 
+    print("========== Running test 04 ==========") 
     cmd = ["./decapod-genpdf.py","-d",tmpDir,"-p",outFn,fn]
     ret = subprocess.call(cmd)
     testDes.append("Testing with minimal options.")
@@ -52,7 +54,7 @@ def main(sysargv):
     testExp.append(0)
     testCmd.append(cmd) 
     
-    print "========== Running test 05 ==========" 
+    print("========== Running test 05 ==========") 
     cmd = ["./decapod-genpdf.py","-d",tmpDir,"-p",outFn,fn]
     ret = subprocess.call(cmd)
     testDes.append("Testing with existing book directory.")
@@ -60,7 +62,7 @@ def main(sysargv):
     testExp.append(1)
     testCmd.append(cmd) 
     
-    print "========== Running test 06 ==========" 
+    print("========== Running test 06 ==========") 
     tmpDir = tempfile.mkdtemp()+"/"
     os.rmdir(tmpDir)
     outFn  = tmpDir + "out.pdf"
@@ -71,7 +73,7 @@ def main(sysargv):
     testExp.append(0)
     testCmd.append(cmd) 
     
-    print "========== Running test 07 ==========" 
+    print("========== Running test 07 ==========") 
     tmpDir = tempfile.mkdtemp()+"/"
     os.rmdir(tmpDir)
     outFn  = tmpDir + "out.pdf"
@@ -82,7 +84,7 @@ def main(sysargv):
     testExp.append(1)
     testCmd.append(cmd) 
     
-    print "========== Running test 08 ==========" 
+    print("========== Running test 08 ==========") 
     tmpDir = tempfile.mkdtemp()+"/"
     os.rmdir(tmpDir)
     outFn  = tmpDir + "out.pdf"
@@ -93,7 +95,7 @@ def main(sysargv):
     testExp.append(0)
     testCmd.append(cmd) 
     
-    print "========== Running test 09 ==========" 
+    print("========== Running test 09 ==========") 
     tmpDir = tempfile.mkdtemp()+"/"
     os.rmdir(tmpDir)
     outFn  = tmpDir + "out.pdf"
@@ -104,7 +106,7 @@ def main(sysargv):
     testExp.append(0)
     testCmd.append(cmd) 
 
-    print "========== Running test 10 ==========" 
+    print("========== Running test 10 ==========") 
     tmpDir = tempfile.mkdtemp()+"/"
     os.rmdir(tmpDir)
     outFn  = tmpDir + "out.pdf"
@@ -115,7 +117,7 @@ def main(sysargv):
     testExp.append(0)
     testCmd.append(cmd) 
 
-    print "========== Running test 11 ==========" 
+    print("========== Running test 11 ==========") 
     tmpDir = tempfile.mkdtemp()+"/"
     os.rmdir(tmpDir)
     outFn  = tmpDir + "out.pdf"
@@ -126,7 +128,7 @@ def main(sysargv):
     testExp.append(0)
     testCmd.append(cmd) 
     
-    print "========== Running test 12 ==========" 
+    print("========== Running test 12 ==========") 
     tmpDir = tempfile.mkdtemp()+"/"
     os.rmdir(tmpDir)
     outFn  = tmpDir + "out.pdf"
@@ -137,7 +139,7 @@ def main(sysargv):
     testExp.append(0)
     testCmd.append(cmd) 
     
-    print "========== Running test 13 ==========" 
+    print("========== Running test 13 ==========") 
     tmpDir = tempfile.mkdtemp()+"/"
     os.rmdir(tmpDir)
     outFn  = tmpDir + "out.pdf"
@@ -148,7 +150,7 @@ def main(sysargv):
     testExp.append(0)
     testCmd.append(cmd) 
     
-    print "========== Running test 14 ==========" 
+    print("========== Running test 14 ==========") 
     tmpDir = tempfile.mkdtemp()+"/"
     os.rmdir(tmpDir)
     outFn  = tmpDir + "out.pdf"
@@ -159,7 +161,7 @@ def main(sysargv):
     testExp.append(0)
     testCmd.append(cmd) 
     
-    print "========== Running test 15 ==========" 
+    print("========== Running test 15 ==========") 
     tmpDir = tempfile.mkdtemp()+"/"
     os.rmdir(tmpDir)
     outFn  = tmpDir + "out.pdf"
@@ -170,7 +172,7 @@ def main(sysargv):
     testExp.append(0)
     testCmd.append(cmd) 
     
-    print "========== Running test 16 ==========" 
+    print("========== Running test 16 ==========") 
     tmpDir = tempfile.mkdtemp()+"/"
     os.rmdir(tmpDir)
     outFn  = tmpDir + "out.pdf"
@@ -181,7 +183,7 @@ def main(sysargv):
     testExp.append(0)
     testCmd.append(cmd) 
 
-    print "========== Running test 17 ==========" 
+    print("========== Running test 17 ==========") 
     tmpDir = tempfile.mkdtemp()+"/"
     os.rmdir(tmpDir)
     outFn  = tmpDir + "out.pdf"
@@ -192,12 +194,12 @@ def main(sysargv):
     testExp.append(0)
     testCmd.append(cmd) 
     
-    print "========== REPORT =========="
-    print "Test\tis  exp.      details"
+    print("========== REPORT ==========")
+    print("Test\tis  exp.      details")
     for i in range(len(testDes)):
         print("%d\t[%d] [%d] %s" %(i+1,testOut[i],testExp[i],testDes[i]))
-    print "========== ERRORS =========="
-    print "Test\tis  exp.      details     command"
+    print("========== ERRORS ==========")
+    print("Test\tis  exp.      details     command")
     for i in range(len(testDes)):
         if (testOut[i] != testExp[i]):
             print("%d\t[%d] [%d] %s\t%s" %(i+1,testOut[i],testExp[i],testDes[i],testCmd[i]))
