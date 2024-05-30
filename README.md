@@ -1,4 +1,17 @@
   <!-- /\* Font Definitions \*/ @font-face {font-family:"Cambria Math"; panose-1:2 4 5 3 5 4 6 3 2 4;} @font-face {font-family:Calibri; panose-1:2 15 5 2 2 2 4 3 2 4;} @font-face {font-family:"Segoe UI"; panose-1:2 11 5 2 4 2 4 2 2 3;} @font-face {font-family:Consolas; panose-1:2 11 6 9 2 2 4 3 2 4;} /\* Style Definitions \*/ p.MsoNormal, li.MsoNormal, div.MsoNormal {margin-top:0cm; margin-right:0cm; margin-bottom:8.0pt; margin-left:0cm; line-height:107%; font-size:11.0pt; font-family:"Calibri",sans-serif;} .MsoPapDefault {margin-bottom:8.0pt; line-height:107%;} @page WordSection1 {size:595.3pt 841.9pt; margin:70.85pt 70.85pt 70.85pt 70.85pt;} div.WordSection1 {page:WordSection1;} /\* List Definitions \*/ ol {margin-bottom:0cm;} ul {margin-bottom:0cm;} -->
+
+Decapod was a project that had some genpdf that should be able to reconstruct a font into a PDF. I thought to bring it back alive once more to cherry-pick some code. I was able to.
+
+Mind the pickyness on the slashes of this program. Every file or directory should be exhaustively surrounded by them, for example -p ./out.pdf and -d ./out/ for the output directory.
+
+While google killed the open source repos it hosted some documentation is still available on https://fluidproject.atlassian.net/wiki/spaces/fluid/pages/11626669/Decapod+script+command+line+options
+
+On git are some repo's that appeared to contain the old versions, so I forked them to keep track of the source. During the development of Decapod until the end of 2012 some project called ocropy was used and killed before the end of decapod. The source of ocropy that matches these commits that were used during the making of the unittests are also still available. The unittests weren't maintained until the end of decapod, but based on a version of decapod-genpdf that relied on ocropy, for example with the ocropus-binarize script, which is still available in the history of https://github.com/ocropus-archive/DUP-ocropy
+
+```
+
+
+Compiling:
 On Ubuntu 20.04:
 first compile iulib:
 git clone https://github.com/rmast/iulib.git
@@ -25,7 +38,7 @@ conda env create -f decapod.yml
 conda activate decapod
 pip install requirements.txt
 pip install -e .
-
+```
 Using decapod-gendpdf.py
 
 \# with list of files
