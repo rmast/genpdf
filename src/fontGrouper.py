@@ -25,6 +25,9 @@
 # Web Site: www.iupr.com
 
 
+from __future__ import division  # To ensure division behavior is consistent if using Python 2
+#import options  # Ensure you have options defined somewhere in your code
+from numpy import zeros, where, copy
 
 from builtins import chr
 from builtins import str
@@ -33,8 +36,12 @@ from past.utils import old_div
 from builtins import object
 from ocrodir import *
 from numpy import *
+#import numpy.numarray
+#from numpy.numarray import ones, zeros, array, where, shape , nd_image, arange, sum
 #from numpy.numarray import *
 from pylab import *
+from math import *
+from time import *
 from PIL import Image
 import fontforge
 import psMat
@@ -209,10 +216,6 @@ class KmeansClassifier(object):
 #       show()
 
 def kmeans(data,k):
-    from pylab import *
-    from math import *
-    from numpy import *
-    from time import *
     from numpy.linalg import norm
     dim = (1024)
     # get k different initial random prototypes (c)
@@ -1081,17 +1084,30 @@ def makeLessSupervisedFont(fontList,i):
         except TypeError:
             continue
     
-    #everythign must be selected for the autos below to work
-    #FONT.selection.select(("ranges",None),"a","z")
-    #FONT.autoWidth(1 ) #does not work...   #Guesses at reasonable horizontal advance widths for the selected glyphs
-    #c.autoInstr()  #Generates TrueType instructisons for all selected glyphs
-    #c.autoHint()   #Generates PostScript hints for all selected glyphs.
-    #xminR,yminR,xmaxR,ymaxR = font["p"].boundingBox()
-    FONT.ascent = FONT.capHeight+(old_div(FONT.xHeight,10))
-    if options.verbose >=2: print(FONT.descent)
-    FONT.descent = int(.45 *  FONT.capHeight) #FONT.descent = int(min(minYlist)+(-.1)*FONT.xHeight) #causes fontforge to crash int(yminR+(1/6)*yminR)
-    #print "font",font.hasvmetrics,"dsf",font.xHeight,font.uwidth,font.ascent,font.descent
-    if options.verbose >=2: print("FONT",FONT.hasvmetrics,FONT.xHeight,FONT.uwidth,FONT.ascent,FONT.descent,FONT.upos,"capheight",FONT.capHeight,"xheight",FONT.xHeight)
+    
+    # Assuming FONT is a valid FontForge font object and options is properly defined
+    #FONT.selection.select(("ranges", None), "a", "z")
+    #FONT.autoWidth(1)  # Guesses at reasonable horizontal advance widths for the selected glyphs
+    # c.autoInstr()  # Uncomment if using TrueType instructions
+    # c.autoHint()  # Uncomment if using PostScript hints
+    
+    # Calculate bounding box (assuming font["p"] is a valid glyph in FONT)
+    #xminR, yminR, xmaxR, ymaxR = FONT["p"].boundingBox()
+    
+    # Updated calculations for ascent and descent
+    # Debugging the capHeight
+    breakpoint()
+    getal = (FONT.capHeight if FONT.capHeight > 0 and FONT.capHeight < 10000 else 1.45 * FONT.xHeight) 
+    getal2 = (FONT.xHeight // 10)
+    FONT.ascent = getal + getal2
+    if options.verbose >= 2:
+        print(FONT.descent)
+    
+    FONT.descent = int(0.45 * getal)
+    
+    if options.verbose >= 2:
+        print("FONT", FONT.hasvmetrics, FONT.xHeight, FONT.uwidth, FONT.ascent, FONT.descent, FONT.upos, "capheight", FONT.capHeight, "xheight", FONT.xHeight)
+
     #font.selection.select(("ranges",None)," "," ")
     avgXscale = (sum(avgXscaleList)/float(len(avgXscaleList)))
     avgYscale = (sum(avgYscaleList)/float(len(avgYscaleList)))
@@ -1146,67 +1162,62 @@ def makeLessSupervisedFont(fontList,i):
 #Dealing with unfonted tokens (tokens that are not part of a candidate font
 #################################################################################################
 
-def resize_character(ichar,nr=32,nc=32,borg=0,ifilter=Image.BICUBIC):
-    '''this function uses PIL to resize an image of a character to 1024 vector'''
-    import numpy.numarray
-    from numpy.numarray import ones, zeros, array, where, shape , nd_image, arange, sum
-    ichar = numpy.numarray.array(ichar,typecode=float)
+
+def resize_character(ichar, nr=32, nc=32, borg=0, ifilter=Image.BICUBIC):
+    '''this function uses PIL to resize an image of a character to a 1024 vector'''
+    ichar = numpy.array(ichar, dtype=float)
     r = float(len(ichar))
     c = float(len(ichar[0]))
-    richar = zeros((nr,nc))
+    richar = zeros((nr, nc))
     dr = nr - r
-    dc = nc - c 
-    if dr>=0 and dc >=0:
-        dr = ceil(old_div(dr,2))
-        dc = ceil(old_div(dc,2))
-        richar[dr:dr+r,dc:dc+c] = ichar*255
+    dc = nc - c
+    if dr >= 0 and dc >= 0:
+        dr = ceil(dr / 2)
+        dc = ceil(dc / 2)
+        dr = int(dr)
+        dc = int(dc)
+        richar[dr:dr+int(r), dc:dc+int(c)] = ichar * 255
     else:
-#        print 'c=', c # Hasan: added this line
-#        print 'r=', r # Hasan: added this line
-        c = int (c) # Hasan: added this line
-        r = int (r) # Hasan: added this line
-        im = PIL.Image.new('L',(c,r))
-        ichar.shape = c*r
-        im.putdata(ichar*255)
-        ichar.shape = r,c
-        if r>=c:
+        c = int(c)
+        r = int(r)
+        im = Image.new('L', (c, r))
+        ichar.shape = (c * r,)
+        im.putdata(ichar * 255)
+        ichar.shape = (r, c)
+        if r >= c:
             nnr = nr
-            nnc = old_div(c*nnr,r)	
+            nnc = c * nnr // r
         else:
             nnc = nc
-            nnr = old_div(r*nnc,c)
-        nnr = ceil(nnr)
-        nnc = ceil(nnc)
-        nnc = int(nnc) # Hasan: added this line
-        nnr = int(nnr) # Hasan: added this line
-        rim = im.resize((nnc,nnr),ifilter)	#  Image.NEAREST , Image.BILINEAR , Image.BICUBIC , Image.ANTIALIAS
-        _ichar = array(rim.getdata())
-        _ichar = numpy.numarray.array(_ichar,typecode=float)
-        _ichar.shape = nnr,nnc
-        if borg==0:
-            x,y = where(_ichar>=83) #magic binary constent
-            _ichar = _ichar*0
-            _ichar[x,y] = 255
+            nnr = r * nnc // c
+        nnr = int(ceil(nnr))
+        nnc = int(ceil(nnc))
+        rim = im.resize((nnc, nnr), ifilter)
+        _ichar = numpy.array(rim.getdata(), dtype=float)
+        _ichar.shape = (nnr, nnc)
+        if borg == 0:
+            x, y = where(_ichar >= 83)  # magic binary constant
+            _ichar = _ichar * 0
+            _ichar[x, y] = 255
 
         dr = nr - nnr
-        dc = nc - nnc 
-        dr = ceil(dr/2.0)
-        dc = ceil(dc/2.0)
-        
-        richar[dr:dr+nnr,dc:dc+nnc] = _ichar
+        dc = nc - nnc
+        dr = int(ceil(dr / 2))
+        dc = int(ceil(dc / 2))
+
+        richar[dr:dr+nnr, dc:dc+nnc] = _ichar
     rI = copy.deepcopy(richar)
-    richar.shape = nr*nc
-    return richar,rI
+    richar.shape = (nr * nc,)
+    return richar, rI
+
 
 def getResizeSerial(tokenID):
     '''this function takes as input a tokenID and returns 1024 resized vector of the tokens prototype image'''
-    import numpy.numarray
-    from numpy.numarray import ones, zeros, array, where, shape , nd_image, arange, sum
     image = PIL.Image.open(b.tokens[tokenID])
     image_array = array(image.getdata())
     [columns,rows] = image.size
     image_array.shape = (rows,columns,3)
-    image_array = numpy.numarray.array(image_array,typecode=int)
+    image_array = numpy.array(image_array,dtype=uint64)
     image_array = image_array[:,:,0]
     serial, _ = resize_character(image_array)
     return serial

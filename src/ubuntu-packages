@@ -1,0 +1,3 @@
+apt-get install -y fontforge python-fontforge python-future python3-matplotlib python3-numpy
+
+
