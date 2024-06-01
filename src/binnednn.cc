@@ -185,7 +185,7 @@ void dist(narray<double>& return_results,bytearray& shifted,bytearray& image, by
         return;
     }
     copy(shifted,image);
-    byte blah = 0; //change with polarity
+    narray_byte blah = 0; //change with polarity
     shift_by(shifted,dx,dy,blah);;
     bytearray mask;
     bytearray shifted2mask;
