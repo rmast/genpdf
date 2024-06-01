@@ -1,4 +1,0 @@
-future==1.0.0
-numpy==1.26.4
-Pillow==10.3.0
-reportlab==4.2.0

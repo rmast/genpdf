@@ -930,7 +930,7 @@ def makeLessSupervisedFont(fontList,i):
     fontforge.setPrefs("AutotraceAsk", "-O 0.001 -u 1 -t 1") # Hasan: added this line: Setting the parameters of the tracing library
     print("Potrace param were set....")
     #open known font
-    font = fontforge.open("/usr/local/bin/DejaVuSans.sfd") #FIXME: change the absolute path to something systematic
+    font = fontforge.open("DejaVuSans.sfd") #FIXME: change the absolute path to something systematic
     #the information from the module font is used in the following way:
     #to compute baseline percentage 
     #font is a known font that is used to model baseline proportion for characters of same class
@@ -1075,9 +1075,9 @@ def makeLessSupervisedFont(fontList,i):
           # c.left_side_bearing = font[str(labels[Tid])].left_side_bearing
             
             #JUST A TRY DELETEME
-            c.vwidth = 8.0
-            c.right_side_bearing = abs(xminR)
-            c.left_side_bearing = abs(xminR)
+            c.vwidth = 8
+            c.right_side_bearing = round(abs(xminR))
+            c.left_side_bearing = round(abs(xminR))
             
             
             #print c.isWorthOutputting()
@@ -1097,8 +1097,8 @@ def makeLessSupervisedFont(fontList,i):
     # Updated calculations for ascent and descent
     # Debugging the capHeight
     breakpoint()
-    getal = (FONT.capHeight if FONT.capHeight > 0 and FONT.capHeight < 10000 else 1.45 * FONT.xHeight) 
-    getal2 = (FONT.xHeight // 10)
+    getal = round(FONT.capHeight if FONT.capHeight > 0 and FONT.capHeight < 10000 else 1.45 * FONT.xHeight) 
+    getal2 = round(FONT.xHeight // 10)
     FONT.ascent = getal + getal2
     if options.verbose >= 2:
         print(FONT.descent)
@@ -1118,7 +1118,7 @@ def makeLessSupervisedFont(fontList,i):
     FONT.selection.select(32)
     #FONT.selection.select(("ranges",None)," "," ")
     FONT.paste()
-    FONT[32].width = font[32].width * avgXscale
+    FONT[32].width = round(font[32].width * avgXscale)
     
     #hard coded '.' character, FIXME this should be changed in the future
     font.selection.select(46)
@@ -1146,7 +1146,7 @@ def makeLessSupervisedFont(fontList,i):
     translatemax = psMat.translate(guessXpad,0)
     FONT[46].transform(translatemax)
     #set borders to match template
-    FONT[46].width = xlength + old_div(xlength,3)
+    FONT[46].width = round(xlength + old_div(xlength,3))
     
     FONT.fontname=options.fontName +str( ("%.2d" % (i)) )  #Give the new font a name
     if options.verbose >= 2: print(options.bookDir+"/fonts/"+options.fontName+str( ("%.2d" % (i)) )+".sfd")
