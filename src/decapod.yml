@@ -1,8 +1,0 @@
-name: decapod
-channels:
-  - defaults
-dependencies:
-  - python==3.10.14
-  - numpy
-  - matplotlib
-prefix: /home/rmast/miniconda3/envs/decapod
