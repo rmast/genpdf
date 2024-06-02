@@ -36,7 +36,7 @@ opts.Add(PathVariable('prefix', 'The installation root for OCRopus ', "/usr/loca
 env = Environment(options=opts)
 env.Append(LIBS = ['ocropus', 'iulib', 'lept', 'png', 'jpeg', 'gif' ,'tiff','SDL','SDL_gfx','gsl','blas' ])
 env.Append(LINKFLAGS=["-fopenmp"])
-env.Append(CXXFLAGS=["-fopenmp"])
+env.Append(CXXFLAGS=["-fopenmp","-O0","-g"])
 #SQLite
 env.Append(CPPDEFINES=['HAVE_SQLITE'])
 env.Append(LIBS=["sqlite3"])

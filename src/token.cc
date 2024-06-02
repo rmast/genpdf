@@ -56,14 +56,20 @@ Token::Token(const Token &tok) {
 }
 //assingment
 Token& Token::operator=(const Token &tok) {
+    if (this == &tok) return *this; // Check for self-assignment
+
     tokenID = tok.get_tokenID();
     count = tok.getCount();
-    for(int i=0;i<tok.getClassesLength();i++)
+    classes.clear(); // Clear existing elements
+    for(int i = 0; i < tok.getClassesLength(); i++)
         classes.push(tok.getClassAt(i));
-    img.resize(tok.sizeX(), tok.sizeY()) ;
+
+    img.resize(tok.sizeX(), tok.sizeY());
     for (int i = 0; i < tok.sizeX(); i++)
         for (int j = 0; j < tok.sizeY(); j++)
-            img(i,j) = tok.getVal(i, j) ;
+            img(i, j) = tok.getVal(i, j);
+
+    return *this; // Return reference to the current object
 }
 
 int Token::next_user_id()
