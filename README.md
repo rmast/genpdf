@@ -31,13 +31,17 @@ sudo ldconfig
 
 then compile this repo:
 git clone https://github.com/rmast/genpdf.git
-cd genpdf
+cd genpdf/src
 scons
 sudo scons install
-conda env create -f decapod.yml
-conda activate decapod
-pip install requirements.txt
+
+python3 -m venv --system-site-packages myenv
+source myenv/bin/activate
 pip install -e .
+python3 -c 'import fontforge; print(fontforge.version())'
+
+decapod-genpdf.py -t 4 -v 4 -p ./hoi3.pdf -d ./hoi3/ -b ../Schermafdruk\ van\ 2024-06-01\ 13-51-22.png 
+
 ```
 Using decapod-gendpdf.py
 
